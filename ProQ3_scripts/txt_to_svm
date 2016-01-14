@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Written by Karolis Uziela in 2014
+
+script_name=`basename $0`
+
+if [ $# != 2 ] ; then
+    echo "
+Usage: 
+
+$script_name <txt_file> <svm_light_file>
+
+"
+    exit 1
+fi
+
+input_file=$1
+output_file=$2
+
+awk '{printf $1" "  ; for (i = 2; i <= NF; i++) {printf i-1":"$i" "} ; print "" }' $input_file >$output_file

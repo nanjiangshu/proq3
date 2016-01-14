@@ -1,0 +1,240 @@
+#!/bin/bash
+
+# Written by Karolis Uziela in 2015
+
+# ------------------------------- Reading in arguments ------------------------------- #
+
+SCRIPT_NAME=`basename $0`
+PROQ3_DIR=`dirname $0`
+
+source $PROQ3_DIR/paths.sh       # Read in paths 
+
+function usage {
+    echo "
+Usage: $SCRIPT_NAME [parameters]
+
+-m/--model               [pdb-model]
+                             PDB model file to be evaluated
+-r/--repack              [yes/no] default=yes
+                             Should we perform the side chain repacking step?  
+-t/--target_length       [Number_of_residues] default='model_length'
+                             The global score is calculated as sum_of_local/target_length
+-k/--keep_files          [yes/no] default=no 
+                             Should we keep the repacked models and svm input files?
+-l/--local_output        [output_file_local] default=[pdb-model].proq3.local
+                             The output file for local predictions
+-g/--global_output       [output_file_global] default=[pdb-model].proq3.global
+                             The output file for global predictions
+-o/--rosetta_log         [rosetta_log_file] default=[pdb-model].rosetta.log
+                             The output file with Rosetta logs
+"
+   exit 1 
+}
+
+if [[ $# < 2 ]] ; then
+    usage
+fi
+
+while [[ $# > 1 ]]
+do
+key="$1"
+
+case $key in
+    -m|--model)
+    MODEL="$2"
+    shift # past argument
+    ;;
+    -r|--repack)
+    REPACK="$2"
+    shift # past argument
+    ;;
+    -t|--target_length)
+    TARGET_LENGTH="$2"
+    shift # past argument
+    ;;
+    -k|--keep)
+    KEEP="$2"
+    shift # past argument
+    ;;
+    -g|--global_output)
+    GLOBAL_OUT="$2"
+    shift # past argument
+    ;;
+    -l|--local_output)
+    LOCAL_OUT="$2"
+    shift # past argument
+    ;;
+    -o|--rosetta_log)
+    ROSETTA_LOG="$2"
+    shift # past argument
+    ;;
+    *)
+    echo "ERROR: Unknown argument: $1"
+    usage
+    ;;
+esac
+shift # past argument or value
+done
+
+if [[ -n $1 ]]; then
+    echo "ERROR: Argument without any supplied value: $1"
+    usage
+fi
+
+if [[ $MODEL == "" ]] ; then
+    echo "ERROR: -m/--model parameter is not set"
+    usage
+elif [[ ! -f $MODEL  ]] ; then
+    echo "ERROR: model file $MODEL does not exist"
+    usage
+fi
+
+if [[ $TARGET_LENGTH != "" ]] ; then
+    re='^[0-9]+$'
+    if ! [[  $TARGET_LENGTH =~ $re ]] ; then
+        echo "ERROR: -t/--target_length must be a number. You supplied: $TARGET_LENGTH"
+        usage
+    fi
+fi
+
+if [[ $GLOBAL_OUT == "" ]] ; then
+    GLOBAL_OUT=$MODEL.proq3.global
+fi
+
+if [[ $LOCAL_OUT == "" ]] ; then
+    LOCAL_OUT=$MODEL.proq3.local
+fi
+
+if [[ -f $GLOBAL_OUT ]] ; then
+    echo "ERROR: The output file $GLOBAL_OUT already exists. Remove the file before (re)running ProQ3."
+    exit 1
+fi
+
+if [[ -f $LOCAL_OUT ]] ; then
+    echo "ERROR: The output file $LOCAL_OUT already exists. Remove the file before (re)running ProQ3."
+    exit 1
+fi
+
+if [[ $REPACK == "yes" ]] || [[ $REPACK == "Yes" ]] || [[ $REPACK == "YES" ]] || [[ $REPACK == "" ]] ; then
+    R=".repacked"
+    M=".minimized"
+elif [[ $REPACK == "no" ]] || [[ $REPACK == "No" ]] ||  [[ $REPACK == "NO" ]] ; then
+    R=""
+    M=""
+else
+    echo "ERROR: -r/--reppack $REPACK value is not recognized"
+    usage
+fi
+
+if [[ $ROSETTA_LOG == "" ]] ; then
+    MODEL_PATH=`readlink -f $MODEL`
+    ROSETTA_LOG="${MODEL_PATH}.rosetta.log"
+fi
+
+if [[ $KEEP == "no" ]] || [[ $KEEP == "No" ]] || [[ $KEEP == "NO" ]] || [[ $KEEP == "" ]] ; then
+    KEEP="no"
+elif [[ $KEEP == "yes" ]] || [[ $KEEP == "Yes" ]] ||  [[ $KEEP == "YES" ]] ; then
+    KEEP="yes"
+else
+    echo "ERROR: -k/--keep $KEEP value is not recognized"
+    usage
+fi
+
+if [[ ! -f $MODEL.ss2 || ! -f $MODEL.acc || ! -f $MODEL.psi || ! -f $MODEL.mtx ]] ; then
+    echo "ERROR: .ss2 .acc .psi or .mtx file is missing. Run <ProQ3_dir>/bin/run_all_external.pl first. Check README for details."
+    exit 1
+fi
+
+if [[ $R == ".repacked" ]] ; then
+    if [ ! -f $MODEL$R.ss2 ] ; then
+        cp $MODEL.ss2 $MODEL$R.ss2
+        cp $MODEL.acc $MODEL$R.acc
+        cp $MODEL.psi $MODEL$R.psi
+        cp $MODEL.mtx $MODEL$R.mtx
+    fi
+fi
+
+# -------------------------------- Main script --------------------------------------- #
+
+MODEL_DIR=`dirname $MODEL`
+CURRENT_DIR=`pwd`
+BASE=`basename $MODEL .pdb`
+
+if [[ ! -f $MODEL$R ]] ; then
+    echo "------------------- Repacking the side chains -----------------"
+    $ROSETTA_BIN/relax.linuxgccrelease -database $ROSETTA_DB -in:file:fullatom -out:file:silent_struct_type binary -nstruct 10 -relax:script $PROQ3_DIR/ProQ3_scripts/repack_min.script -in:file:s $MODEL -out:file:silent $MODEL$R.silent -relax:constrain_relax_to_start_coords >>$ROSETTA_LOG
+    to_extract=`grep ^SCORE $MODEL$R.silent | tail -n +2 | sort -n -k2 | head -n 1 | awk '{print $(NF)}'`
+    $ROSETTA_BIN/extract_pdbs.linuxgccrelease -database $ROSETTA_DB -in:file:silent $MODEL$R.silent -in::file::tags $to_extract -out::prefix $MODEL_DIR/ >>$ROSETTA_LOG
+    mv $MODEL_DIR/$to_extract.pdb $MODEL$R
+    rm $MODEL$R.silent
+fi
+
+if [[ ! -f $MODEL$R.features.proq2.$$.temp ]] ; then
+    echo "------------------- Extracting ProQ2 features -------------------"
+    $ROSETTA_BIN/score.linuxgccrelease -database $ROSETTA_DB -in:file:fullatom -ProQ:basename $MODEL$R -in:file:s $MODEL$R -score:weights ProQ2 -ProQ:output_feature_vector -ignore_zero_occupancy F > $MODEL$R.features.$$.temp 
+    sed '/^Outfile:/q' $MODEL$R.features.$$.temp > $MODEL$R.features.$$.temp2
+    grep ^SVM $MODEL$R.features.$$.temp2 > $MODEL$R.features.proq2.$$.temp
+    rm $MODEL$R.features.$$.temp $MODEL$R.features.$$.temp2
+fi
+
+if [[ ! -f $MODEL$R$M ]] ; then
+    echo "------------------- Minimizing energies -------------------"
+    cd $MODEL_DIR
+    /bin/ls $BASE.pdb$R > $BASE.pdb$R.list
+    $ROSETTA_BIN/minimize_with_cst.linuxgccrelease -in:file:l $BASE.pdb$R.list -in:file:fullatom -ddg::out_pdb_prefix minimized_${BASE}_$$ -database $ROSETTA_DB -ddg:min_cst >>$ROSETTA_LOG # Different Rosetta releases name output files differently. Better be careful and add a long prefix to be sure
+    mv minimized_${BASE}_$$* $BASE.pdb$R$M    
+    rm $BASE.pdb$R.list
+    cd $CURRENT_DIR
+fi
+
+if [[ ! -f $MODEL$R$M.score.$$.temp ]] ; then
+    echo "------------------- Calculating Rosetta energies -------------------"
+    $ROSETTA_BIN/per_residue_energies.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp >>$ROSETTA_LOG
+    $ROSETTA_BIN/per_residue_energies.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp2 -score:weights $PROQ3_DIR/weights/some_centroid.wts -in:file:residue_type_set centroid >>$ROSETTA_LOG
+    $ROSETTA_BIN/score.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp3 -score:weights $PROQ3_DIR/weights/global_centroid.wts -in:file:residue_type_set centroid >>$ROSETTA_LOG
+fi
+
+if [[ ! -f $MODEL$R.proq3.svm ]] ; then
+    echo "------------------- Generating SVM input -------------------"
+    $R_SCRIPT $PROQ3_DIR/ProQ3_scripts/extract-per-residue-features.R $MODEL$R$M.score.$$.temp $MODEL$R$M.features.highres.$$.temp
+    $R_SCRIPT $PROQ3_DIR/ProQ3_scripts/extract-per-residue-centroid-features.R $MODEL$R$M.score.$$.temp2 $MODEL$R$M.features.lowres.$$.temp
+    feat_len=`cat $MODEL$R$M.features.highres.$$.temp | wc -l`
+    cat $MODEL$R$M.score.$$.temp3 | grep "^SCORE:" > $MODEL$R$M.score.$$.temp4
+    $R_SCRIPT $PROQ3_DIR/ProQ3_scripts/extract-per-residue-centroid-features-global-normalized.R $MODEL$R$M.score.$$.temp4 $MODEL$R$M.features.lowres_global.$$.temp $feat_len
+    $PROQ3_DIR/ProQ3_scripts/svm_to_txt $MODEL$R.features.proq2.$$.temp $MODEL$R.features.proq2.$$.temp2
+    cut -f 3-176 -d " " $MODEL$R.features.proq2.$$.temp2 > $MODEL$R.features.proq2.$$.temp3
+    cut -f 1 -d " " $MODEL$R.features.proq2.$$.temp > $MODEL$R.features.target.$$.temp
+    cut -f 152-154,155-157,171-172 -d " " $MODEL$R.features.proq2.$$.temp3 > $MODEL$R.features.rsa_ss.$$.temp
+    paste -d " " $MODEL$R.features.target.$$.temp $MODEL$R.features.proq2.$$.temp3 $MODEL$R$M.features.highres.$$.temp $MODEL$R$M.features.lowres.$$.temp $MODEL$R$M.features.lowres_global.$$.temp > $MODEL$R.proq3
+    paste -d " " $MODEL$R.features.target.$$.temp $MODEL$R.features.proq2.$$.temp3 > $MODEL$R.proq2
+    paste -d " " $MODEL$R.features.target.$$.temp $MODEL$R.features.rsa_ss.$$.temp $MODEL$R$M.features.highres.$$.temp > $MODEL$R.highres
+    paste -d " " $MODEL$R.features.target.$$.temp $MODEL$R.features.rsa_ss.$$.temp $MODEL$R$M.features.lowres.$$.temp $MODEL$R$M.features.lowres_global.$$.temp > $MODEL$R.lowres
+    for txt_file in $MODEL$R.proq3 $MODEL$R.proq2 $MODEL$R.highres $MODEL$R.lowres ; do
+        $PROQ3_DIR/ProQ3_scripts/txt_to_svm $txt_file $txt_file.svm
+        rm $txt_file
+    done
+    rm $MODEL$R$M.features.highres.$$.temp $MODEL$R$M.features.lowres.$$.temp $MODEL$R$M.features.lowres_global.$$.temp $MODEL$R.features.proq2.$$.temp $MODEL$R.features.proq2.$$.temp2 $MODEL$R.features.proq2.$$.temp3 $MODEL$R.features.target.$$.temp $MODEL$R$M.score.$$.temp $MODEL$R$M.score.$$.temp2 $MODEL$R$M.score.$$.temp3 $MODEL$R$M.score.$$.temp4 $MODEL$R.features.rsa_ss.$$.temp
+fi
+
+if [[ ! -f $GLOBAL_OUT ]] ; then
+    echo "------------------- Making predictions -------------------"
+    $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.proq2.svm $PROQ3_DIR/svm_models/ProQ2$R.model $MODEL$R.proq2.pred.$$.temp 
+    $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.lowres.svm $PROQ3_DIR/svm_models/lowres$R.model $MODEL$R.lowres.pred.$$.temp 
+    $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.highres.svm $PROQ3_DIR/svm_models/highres$R.model $MODEL$R.highres.pred.$$.temp 
+    $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.proq3.svm $PROQ3_DIR/svm_models/ProQ3$R.model $MODEL$R.proq3.pred.$$.temp 
+    echo "ProQ2 ProQ_Lowres ProQ_Highres ProQ3" > $LOCAL_OUT
+    echo "ProQ2 ProQ_Lowres ProQ_Highres ProQ3" > $GLOBAL_OUT
+    paste -d " " $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp >> $LOCAL_OUT
+    if [[ $TARGET_LENGTH == "" ]] ; then
+        TARGET_LENGTH=`cat $MODEL$R.proq2.pred.$$.temp | wc -l`
+    fi
+    tail -n +2 $LOCAL_OUT | awk -v my_length="$TARGET_LENGTH" '{ sum1 += $1 ; sum2 += $2 ; sum3 += $3 ; sum4 += $4 } END { if (my_length > 0) print sum1 / my_length, sum2 / my_length, sum3 / my_length, sum4 / my_length }' >> $GLOBAL_OUT
+    rm $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp
+fi
+
+if [[ $KEEP == "no" ]] ; then
+    if [[ $R == ".repacked" ]] ; then
+        rm $MODEL$R $MODEL$R$M $MODEL$R.ss2 $MODEL$R.acc $MODEL$R.psi $MODEL$R.mtx
+    fi
+    rm $MODEL$R.proq3.svm $MODEL$R.proq2.svm $MODEL$R.highres.svm $MODEL$R.lowres.svm
+fi
