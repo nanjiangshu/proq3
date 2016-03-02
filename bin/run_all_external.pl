@@ -2,7 +2,7 @@
 use Cwd 'abs_path';
 use File::Basename;
 
-my $DB="/proj/wallner/users/x_karuz/data_sets/uniref/uniref90.fasta"; # Set this variable to point to formatted fasta database (such as uniref90.fasta)
+my $DB=$ENV{'BLAST_DATABASE'}; # Set this variable to point to formatted fasta database (such as uniref90.fasta)
 
 my $LWP_loaded=1;
 my $HTML_loaded=0;

@@ -7,4 +7,4 @@ then
 fi
 #format: 1:9-line, 2:3-line, all seq must have a title line(1 20 3).
 
-/nfs/bjornw/Research/git/ProQ_scripts/apps/sspro4/server/predict_seq_ss /nfs/bjornw/Research/git/ProQ_scripts/apps/sspro4/model/sspro.model $1 $2 $3 
+/big/software/proq3/apps/sspro4/server/predict_seq_ss /big/software/proq3/apps/sspro4/model/sspro.model $1 $2 $3 
