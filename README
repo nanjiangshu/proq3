@@ -44,6 +44,59 @@ complete without any errors. The tests are run with -k/--keep_files option, so t
 bit more files than usual. The most interesting output is in *.local and *.global files as 
 explained below.
 
+## Easy run of ProQ3
+The simplest way to run ProQ3 is using the script `run_proq3.sh`
+before running this script, copy the file `set_env.example.sh` to `set_env.sh`
+and set the environmental variables accordingly. That is
+
+    $ cp set_env.example.sh set_env.sh
+
+and then change variables `rosetta_path` and and `BLAST_DATABASE` to the actual
+locations in your system.
+
+After that, you can run the script `run_proq3.sh` given your model files in PDB format
+The syntax of `run_proq3.sh` is
+
+<pre>
+Usage:  run_proq3.sh PDB-model [PDB-model ...] [-l PDB-model-LISTFILE] 
+                     [-fasta seqfile]
+                     [-profile pathprofile]
+                     [-outpath DIR]  [-q]
+                     [-only-build-profile]
+
+Description:
+    Run ProQ3 given one or several PDB-models 
+    When the sequence file of the target is given, the sequence profile will be
+    calculated only once based on this given sequences, the sequences of all
+    PDB-models should be a subset of this target sequence.
+
+Options:
+  -fasta   FILE     Set the target sequence in FASTA format
+  -profile  STR     Path for pre-built profile
+  -outpath  DIR     Set output path, (default: the same as model file)
+  -l       FILE     Set the file containing paths of PDB-models, one model per line
+  -q                Quiet mode
+  -verbose          Run script in verbose mode
+  -h, --help        Print this help message and exit
+
+ProQ3 options:
+  -r  yes|no        Whether to perform the side chain repacking (default: yes)
+  -t     INT        Set the target length (default: length of the target sequence or model)
+  -k  yes|no        Whether keep repacked models and SVM output (default: no)
+</pre>
+
+###Example commands for the `run_proq3.sh` script
+   * run ProQ3 given just a model structure
+        $ run_proq3.sh test/1e12A_0001.pdb -outpath test/out1
+
+   * run ProQ3 for two model structures by given the amino acid sequence of the target
+        $ run_proq3.sh -fasta test/1e12A.fasta test/1e12A_0001.pdb test/1e12A_0001.subset.pdb -outpath test/out2
+
+   * run ProQ3 for two model structures with pre-built profile
+        $ run_proq3.sh -profile test/profile/1e12A.fasta test/1e12A_0001.pdb test/1e12A_0001.subset.pdb -outpath test/out4
+
+
+
 ================================== BEFORE RUNING PROQ3 ============================================
 
 ProQ3 is Model Quality Assessment Program that predictis the quality of individual models. To do 
@@ -87,6 +140,7 @@ So basically, this is what you want to do most of the time:
 etc.
 
 ====================================== RUNING PROQ3 ===============================================
+
 
 Now you are ready to run ProQ3. Type ./ProQ3 without parameters to see the usage.
 
