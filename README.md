@@ -2,11 +2,14 @@
 
 ###Authors: 
 Karolis Uziela (karolis.uziela@scilifelab.se)
+
 Björn Wallner (bjornw@ifm.liu.se)
+
 Nanjiang Shu (nanjinag.shu@scilifelab.se)
+
 Last updated: 2016-03-03
 
-## REQUIREMENTS
+## Requirements
 
 1. Any of recent Rosetta weekly releases (week 36, 2013 or newer)
 
@@ -21,15 +24,15 @@ included these into the ProQ3 package, so you don't have to download it to use P
 should make sure that you have the appropriate licences before using the programs. The original 
 packages are available here:
 
- * SSpro4 http://download.igb.uci.edu/sspro4.tar.gz
+    * SSpro4 http://download.igb.uci.edu/sspro4.tar.gz
 
- * Psipred http://bioinfadmin.cs.ucl.ac.uk/downloads/psipred/old/psipred25.tar.gz
+    * Psipred http://bioinfadmin.cs.ucl.ac.uk/downloads/psipred/old/psipred25.tar.gz
 
- * Blast ftp://ftp.ncbi.nlm.nih.gov/blast/executables/release/2.2.26/blast-2.2.26-x64-linux.tar.gz
+    * Blast ftp://ftp.ncbi.nlm.nih.gov/blast/executables/release/2.2.26/blast-2.2.26-x64-linux.tar.gz
 
- * SVM_light http://download.joachims.org/svm_light/current/svm_light_linux64.tar.gz
+    * SVM_light http://download.joachims.org/svm_light/current/svm_light_linux64.tar.gz
 
-## INSTALLATION
+## Installation
 
 Steps you need to do to install ProQ3 (order does not matter):
 
@@ -42,14 +45,14 @@ path)
 3. Set the $DB variable in ./bin/run_all_external.pl to a formated sequence database e.g. uniref90. 
 If you don't have a formatted sequence database follow these steps:
 
-  1. Download the database into an empty directory using command `wget ft2://ftp.ebi.ac.uk/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz`
+    1. Download the database into an empty directory using command `wget ft2://ftp.ebi.ac.uk/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz`
 
-  2. Extract the files using command `gunzip uniref90.fasta.gz`
+    2. Extract the files using command `gunzip uniref90.fasta.gz`
 
-  3. Format the sequence database using command `<ProQ3_dir>/apps/blast-2.2.26/bin/formatdb -i 
+    3. Format the sequence database using command `<ProQ3_dir>/apps/blast-2.2.26/bin/formatdb -i 
 uniref90.fasta
 
-  4. Set $DB variable in ./bin/run_all_external.pl to your uniref90.fasta file
+    4. Set $DB variable in ./bin/run_all_external.pl to your uniref90.fasta file
 
 4. If you don't have "zoo" package, install it by launching R and typing install.packages("zoo")
 
@@ -57,10 +60,11 @@ uniref90.fasta
 
 6. Run ./configure.pl
 
-##TEST RUN
+##Test run
 
 Go to ProQ3 installation directory and type 
-    $ ./run_test.sh 
+
+    $ ./run_test.sh
 
 to perform the test run. It should 
 complete without any errors. The tests are run with `-k/--keep_files` option, so they output a little 
@@ -74,7 +78,7 @@ and set the environmental variables accordingly. That is
 
     $ cp set_env.example.sh set_env.sh
 
-and then change variables `rosetta_path` and and `BLAST_DATABASE` to the actual
+and then change variables `rosetta_path` and `BLAST_DATABASE` to the actual
 locations in your system.
 
 After that, you can run the script `run_proq3.sh` given your model files in PDB format.
@@ -114,9 +118,11 @@ ProQ3 options:
 
         $ run_proq3.sh test/1e12A_0001.pdb -outpath test/out1
 
+
    * run ProQ3 for two model structures by given the amino acid sequence of the target
 
         $ run_proq3.sh -fasta test/1e12A.fasta test/1e12A_0001.pdb test/1e12A_0001.subset.pdb -outpath test/out2
+
 
    * run ProQ3 for two model structures with pre-built profile
 
@@ -125,7 +131,7 @@ ProQ3 options:
 
 
 ##Alternative ways to run ProQ3, separate profile building and model scroing
-###BEFORE RUNING PROQ3
+###Before runing PROQ3
 
 ProQ3 is Model Quality Assessment Program that predictis the quality of individual models. To do 
 this ProQ3 uses both information that can be calculated from the 3D coordinates of the model as 
@@ -135,45 +141,49 @@ sequence specific features needs to be calculated.
 
 1. The PDB model spans the whole target sequence
 
-If your pdb model spans the whole sequence of the target protein then you can simply run:
+    If your pdb model spans the whole sequence of the target protein then you can simply run:
 
-    $ ./bin/run_all_external.pl -pdb [pdb-model]
+        $ ./bin/run_all_external.pl -pdb [pdb-model]
 
-The above will create [pdb-model].ss2, [pdb-model].acc, [pdb-model].psi and [pdb-model].mtx files.  
-These files contain sequence-specific information that is needed to run ProQ3.
+    The above will create [pdb-model].ss2, [pdb-model].acc, [pdb-model].psi and
+    [pdb-model].mtx files.  These files contain sequence-specific information
+    that is needed to run ProQ3.
 
-2. The PDB model covers only part of the target sequence
-PDB models often have "missing residues" - not all of the residues in the target sequence are 
-modelled. In that case it is better to extract sequence-specific features from the full target 
-sequence and then copy them to the model.
+2.  The PDB model covers only part of the target sequence
+    PDB models often have "missing residues" - not all of the residues in the
+    target sequence are modelled. In that case it is better to extract
+    sequence-specific features from the full target sequence and then copy them
+    to the model.
 
-    $ ./bin/run_all_external.pl -fasta [target-sequence-fasta]
+        $ ./bin/run_all_external.pl -fasta [target-sequence-fasta]
 
-    $ ./ProQ3/bin/copy_features_from_master.pl [pdb-model] [target-sequence-fasta]
+        $ ./ProQ3/bin/copy_features_from_master.pl [pdb-model] [target-sequence-fasta]
 
-After you run run_all_external.pl on [target-sequence-fasta] it will create 
-[target-sequence-fasta].ss2, [target-sequence-fasta].acc, [target-sequence-fasta].psi and 
-[target-sequence-fasta].mtx files. The script copy_features_from_master.pl will take relevant parts 
-of these files and copy them to [pdb-model].ss2, [pdb-model].acc, [pdb-model].psi and 
-[pdb-model].mtx files.
+    After you run run_all_external.pl on [target-sequence-fasta] it will create 
+    [target-sequence-fasta].ss2, [target-sequence-fasta].acc, [target-sequence-fasta].psi and 
+    [target-sequence-fasta].mtx files. The script copy_features_from_master.pl will take relevant parts 
+    of these files and copy them to [pdb-model].ss2, [pdb-model].acc, [pdb-model].psi and 
+    [pdb-model].mtx files.
 
 3. If you have several PDB models of the same target protein (which is often the case), you should 
-run run_all_external.pl only once (which is the time consuming part). After that you can just use 
-copy_features_from_master.pl to copy the sequence-specific features to all of the PDB models. This 
-will work regardless whether your PDB models cover the whole or only part of the target sequence!
+    run run_all_external.pl only once (which is the time consuming part). After
+    that you can just use copy_features_from_master.pl to copy the
+    sequence-specific features to all of the PDB models. This will work
+    regardless whether your PDB models cover the whole or only part of the
+    target sequence!
 
-So basically, this is what you want to do most of the time:
+    So basically, this is what you want to do most of the time:
 
-    $ ./bin/run_all_external.pl -fasta [target-sequence-fasta]
+        $ ./bin/run_all_external.pl -fasta [target-sequence-fasta]
 
-    $ ./ProQ3/bin/copy_features_from_master.pl [first-pdb-model] [target-sequence-fasta]
+        $ ./ProQ3/bin/copy_features_from_master.pl [first-pdb-model] [target-sequence-fasta]
 
-    $ ./ProQ3/bin/copy_features_from_master.pl [second-pdb-model] [target-sequence-fasta]
+        $ ./ProQ3/bin/copy_features_from_master.pl [second-pdb-model] [target-sequence-fasta]
 
-    $ ./ProQ3/bin/copy_features_from_master.pl [third-pdb-model] [target-sequence-fasta]
+        $ ./ProQ3/bin/copy_features_from_master.pl [third-pdb-model] [target-sequence-fasta]
 etc.
 
-###RUNING PROQ3
+###Runing proq3
 
 Now you are ready to run ProQ3. Type 
 
@@ -215,9 +225,12 @@ The default output files are:
 Both local and global score files will contain 4 columns:
 
 1. ProQ2 - ProQ2 prediction (as in the original ProQ2, but retrained on CASP9 data)
+
 2. ProQ_lowres - ProQ predictions that are based on Rosetta low resolution (centroid) energy 
 functions
+
 3. ProQ_highres - ProQ predictions that are based on Rosetta high resolution energy functions
+
 4. ProQ3 - ProQ3 predictions that combine all three of the above predictions
 
 Other options explained in more detail:
