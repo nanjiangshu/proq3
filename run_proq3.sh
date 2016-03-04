@@ -4,7 +4,7 @@
 # Description: Run Proq3 by given the PDB model
 # Author: Nanjiang Shu (nanjiang.shu@scilifelab.se)
 
-SCRIPT_PATH=`realpath ${BASH_SOURCE[0]}`
+SCRIPT_PATH=`readlink -f ${BASH_SOURCE[0]}`
 rundir=`dirname $SCRIPT_PATH`
 progname=`basename $0`
 size_progname=${#progname}
@@ -85,7 +85,7 @@ RunProQ3_with_profile(){ #{{{
         echo "modelfile \"$modelfile\" is empty or does not exist. Ignore" >&2
         return 1
     fi
-    modelfile=`realpath $modelfile`
+    modelfile=`readlink -f $modelfile`
     basename_modelfile=`basename $modelfile`
     local path_modelfile=`dirname $modelfile`
     local outpath=
@@ -114,7 +114,7 @@ RunProQ3_without_profile(){ #{{{
         echo "modelfile \"$modelfile\" is empty or does not exist. Ignore" >&2
         return 1
     fi
-    modelfile=`realpath $modelfile`
+    modelfile=`readlink -f $modelfile`
     basename_modelfile=`basename $modelfile`
     local path_modelfile=`dirname $modelfile`
     local outpath=
@@ -205,7 +205,7 @@ while [ "$1" != "" ]; do
     shift
 done
 
-IsProgExist realpath
+IsProgExist readlink
 
 if [ "$modelListFile" != ""  ]; then 
     if [ -s "$modelListFile" ]; then 
