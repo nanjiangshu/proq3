@@ -14,8 +14,8 @@ bin/copy_features_from_master.pl test.$num/1e12A_0001.subset.pdb test.$num/1e12A
 
 echo "------------- Testing ProQ3 ------------------"
 
-./ProQ3 -m test.$num/1e12A_0001.pdb -r no -k yes
-./ProQ3 -m test.$num/1e12A_0001.subset.pdb -r yes -k yes -t 62
+./ProQ3 -m test.$num/1e12A_0001.pdb -r no -d yes
+./ProQ3 -m test.$num/1e12A_0001.subset.pdb -r yes -d yes -t 62
 
 echo "------------- Checking the output ------------------"
 

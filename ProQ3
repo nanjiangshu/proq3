@@ -28,6 +28,8 @@ Usage: $SCRIPT_NAME [parameters]
                              The output file for global predictions
 -o/--rosetta_log         [rosetta_log_file] default=[pdb-model].rosetta.log
                              The output file with Rosetta logs
+-d/--debug_mode          [yes/no] default=no 
+                             Debug mode keeps all temporary files
 "
    exit 1 
 }
@@ -67,6 +69,10 @@ case $key in
     ;;
     -o|--rosetta_log)
     ROSETTA_LOG="$2"
+    shift # past argument
+    ;;
+    -d|--debug_mode)
+    DEBUG="$2"
     shift # past argument
     ;;
     *)
@@ -137,7 +143,16 @@ if [[ $KEEP == "no" ]] || [[ $KEEP == "No" ]] || [[ $KEEP == "NO" ]] || [[ $KEEP
 elif [[ $KEEP == "yes" ]] || [[ $KEEP == "Yes" ]] ||  [[ $KEEP == "YES" ]] ; then
     KEEP="yes"
 else
-    echo "ERROR: -k/--keep $KEEP value is not recognized"
+    echo "ERROR: -k/--keep $KEEP value is not recognized (should be yes or no)"
+    usage
+fi
+
+if [[ $DEBUG == "no" ]] || [[ $DEBUG == "No" ]] || [[ $DEBUG == "NO" ]] || [[ $DEBUG == "" ]] ; then
+    DEBUG="no"
+elif [[ $DEBUG == "yes" ]] || [[ $DEBUG == "Yes" ]] ||  [[ $DEBUG == "YES" ]] ; then
+    DEBUG="yes"
+else
+    echo "ERROR: -d/--debug_mode $DEBUG value is not recognized (should be yes or no)"
     usage
 fi
 
@@ -168,7 +183,9 @@ if [[ ! -f $MODEL$R ]] ; then
     to_extract=`grep ^SCORE $MODEL$R.silent | tail -n +2 | sort -n -k2 | head -n 1 | awk '{print $(NF)}'`
     $ROSETTA_BIN/extract_pdbs.linuxgccrelease -database $ROSETTA_DB -in:file:silent $MODEL$R.silent -in::file::tags $to_extract -out::prefix $MODEL_DIR/ >>$ROSETTA_LOG
     mv $MODEL_DIR/$to_extract.pdb $MODEL$R
-    rm $MODEL$R.silent
+    if [[ $DEBUG == "no" ]] ; then
+        rm $MODEL$R.silent
+    fi
 fi
 
 if [[ ! -f $MODEL$R.features.proq2.$$.temp ]] ; then
@@ -176,7 +193,9 @@ if [[ ! -f $MODEL$R.features.proq2.$$.temp ]] ; then
     $ROSETTA_BIN/score.linuxgccrelease -database $ROSETTA_DB -in:file:fullatom -ProQ:basename $MODEL$R -in:file:s $MODEL$R -score:weights ProQ2 -ProQ:output_feature_vector -ignore_zero_occupancy F > $MODEL$R.features.$$.temp 
     sed '/^Outfile:/q' $MODEL$R.features.$$.temp > $MODEL$R.features.$$.temp2
     grep ^SVM $MODEL$R.features.$$.temp2 > $MODEL$R.features.proq2.$$.temp
-    rm $MODEL$R.features.$$.temp $MODEL$R.features.$$.temp2
+    if [[ $DEBUG == "no" ]] ; then
+        rm $MODEL$R.features.$$.temp $MODEL$R.features.$$.temp2
+    fi
 fi
 
 if [[ ! -f $MODEL$R$M ]] ; then
@@ -185,7 +204,9 @@ if [[ ! -f $MODEL$R$M ]] ; then
     /bin/ls $BASE.pdb$R > $BASE.pdb$R.list
     $ROSETTA_BIN/minimize_with_cst.linuxgccrelease -in:file:l $BASE.pdb$R.list -in:file:fullatom -ddg::out_pdb_prefix minimized_${BASE}_$$ -database $ROSETTA_DB -ddg:min_cst >>$ROSETTA_LOG # Different Rosetta releases name output files differently. Better be careful and add a long prefix to be sure
     mv minimized_${BASE}_$$* $BASE.pdb$R$M    
-    rm $BASE.pdb$R.list
+    if [[ $DEBUG == "no" ]] ; then
+        rm $BASE.pdb$R.list
+    fi
     cd $CURRENT_DIR
 fi
 
@@ -215,7 +236,9 @@ if [[ ! -f $MODEL$R.proq3.svm ]] ; then
         $PROQ3_DIR/ProQ3_scripts/txt_to_svm $txt_file $txt_file.svm
         rm $txt_file
     done
-    rm $MODEL$R$M.features.highres.$$.temp $MODEL$R$M.features.lowres.$$.temp $MODEL$R$M.features.lowres_global.$$.temp $MODEL$R.features.proq2.$$.temp $MODEL$R.features.proq2.$$.temp2 $MODEL$R.features.proq2.$$.temp3 $MODEL$R.features.target.$$.temp $MODEL$R$M.score.$$.temp $MODEL$R$M.score.$$.temp2 $MODEL$R$M.score.$$.temp3 $MODEL$R$M.score.$$.temp4 $MODEL$R.features.rsa_ss.$$.temp
+    if [[ $DEBUG == "no" ]] ; then
+        rm $MODEL$R$M.features.highres.$$.temp $MODEL$R$M.features.lowres.$$.temp $MODEL$R$M.features.lowres_global.$$.temp $MODEL$R.features.proq2.$$.temp $MODEL$R.features.proq2.$$.temp2 $MODEL$R.features.proq2.$$.temp3 $MODEL$R.features.target.$$.temp $MODEL$R$M.score.$$.temp $MODEL$R$M.score.$$.temp2 $MODEL$R$M.score.$$.temp3 $MODEL$R$M.score.$$.temp4 $MODEL$R.features.rsa_ss.$$.temp
+    fi
 fi
 
 if [[ ! -f $GLOBAL_OUT ]] ; then
@@ -231,10 +254,12 @@ if [[ ! -f $GLOBAL_OUT ]] ; then
         TARGET_LENGTH=`cat $MODEL$R.proq2.pred.$$.temp | wc -l`
     fi
     tail -n +2 $LOCAL_OUT | awk -v my_length="$TARGET_LENGTH" '{ sum1 += $1 ; sum2 += $2 ; sum3 += $3 ; sum4 += $4 } END { if (my_length > 0) print sum1 / my_length, sum2 / my_length, sum3 / my_length, sum4 / my_length }' >> $GLOBAL_OUT
-    rm $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp
+    if [[ $DEBUG == "no" ]] ; then
+        rm $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp
+    fi
 fi
 
-if [[ $KEEP == "no" ]] ; then
+if [[ $KEEP == "no" ]] && [[ $DEBUG == "no" ]] ; then
     if [[ $R == ".repacked" ]] ; then
         rm $MODEL$R $MODEL$R$M $MODEL$R.ss2 $MODEL$R.acc $MODEL$R.psi $MODEL$R.mtx
     fi
