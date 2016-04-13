@@ -212,7 +212,7 @@ fi
 
 if [[ ! -f $MODEL$R$M.score.$$.temp ]] ; then
     echo "------------------- Calculating Rosetta energies -------------------"
-    $ROSETTA_BIN/per_residue_energies.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp >>$ROSETTA_LOG
+    $ROSETTA_BIN/per_residue_energies.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp -score:weights $PROQ3_DIR/weights/talaris2013.wts >>$ROSETTA_LOG
     $ROSETTA_BIN/per_residue_energies.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp2 -score:weights $PROQ3_DIR/weights/some_centroid.wts -in:file:residue_type_set centroid >>$ROSETTA_LOG
     $ROSETTA_BIN/score.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp3 -score:weights $PROQ3_DIR/weights/global_centroid.wts -in:file:residue_type_set centroid >>$ROSETTA_LOG
 fi

@@ -20,7 +20,8 @@ scores <- read.table(input_file, head=T)
 
 feat_len <- as.numeric(feat_len)
 
-scores <- scores[,3:8] # Seven columns: rg co hs_pair ss_pair rsigma sheet
+#scores <- scores[,3:8] # Six columns: rg co hs_pair ss_pair rsigma sheet
+scores <- scores[c("rg", "co", "hs_pair", "ss_pair", "rsigma", "sheet")] # Six columns: rg co hs_pair ss_pair rsigma sheet
 #scores$rf_norm <- scores$rg / feat_len^(2/5) # Seven columns
 
 #scores_sigmoid <- scores 

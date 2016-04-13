@@ -27,7 +27,8 @@ my_window <- function(scores_sigmoid, window_size) {
 
 scores <- read.table(input_file, head=T, as.is=T)
 
-scores <- scores[,-c(1,2,10)] # remove SCORE:, filename and residue number columns. What is left: 4 features and `score` (total colummn number: 5)
+#scores <- scores[,-c(1,2,10)] # remove SCORE:, filename and residue number columns. What is left: 4 features and `score` (total colummn number: 5)
+scores <- scores[c("vdw", "cenpack", "pair", "rama", "env", "cbeta", "score")] # remove SCORE:, filename and residue number columns. What is left: 4 features and `score` (total colummn number: 5)
 
 scores_sigmoid <- scores
 

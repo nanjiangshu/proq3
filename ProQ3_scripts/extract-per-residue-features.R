@@ -30,7 +30,8 @@ scores <- read.table(input_file, head=T, as.is=T)
 
 #head(scores)
 
-scores <- scores[,-c(1,2,20)] # remove SCORE:, filename and residue number columns. What is left: 16 features and `score` (total colummn number: 17)
+#scores <- scores[,-c(1,2,20)] # remove SCORE:, filename and residue number columns. What is left: 16 features and `score` (total colummn number: 17)
+scores <- scores[c("fa_atr", "fa_rep", "fa_sol", "fa_intra_rep", "fa_elec", "pro_close", "hbond_sr_bb", "hbond_lr_bb", "hbond_bb_sc", "hbond_sc", "dslf_fa13", "rama", "omega", "fa_dun", "p_aa_pp", "ref", "score")] # remove SCORE:, filename and residue number columns. What is left: 16 features and `score` (total colummn number: 17)
 scores$hbonds <- rowSums(scores[,c(7,8,9,10)]) 
 scores$van_der_vals <- rowSums(scores[,c(1,2,4)])
 scores$side_chains <- rowSums(scores[,c(6,11,14,16)])
