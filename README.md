@@ -34,7 +34,9 @@ packages are available here:
 
 ## Installation
 
-Steps you need to do to install ProQ3 (order does not matter):
+Firstly, rename the file ./paths_example.sh to ./paths.sh
+
+Then follow these steps to install ProQ3 (the order does not matter):
 
 1. Set "rosetta_path" variable to point to Rosetta installation direcotry in ./paths.sh
 
