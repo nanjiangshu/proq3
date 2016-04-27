@@ -1,7 +1,7 @@
 #!/bin/bash
 # Set environmental variables
 
-SCRIPT_PATH=`realpath ${BASH_SOURCE[0]}`
+SCRIPT_PATH=`readlink -f ${BASH_SOURCE[0]}`
 rundir=`dirname $SCRIPT_PATH`
 
 rosetta_path=$rundir/apps/rosetta/rosetta_2014.16.56682_bundle

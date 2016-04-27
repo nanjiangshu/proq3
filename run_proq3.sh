@@ -232,7 +232,7 @@ if [ "$g_outpath" != "" ] ; then
         echo "Failed to create outpath \"$g_outpath\". exit."   >&2
         exit 1
     fi
-    g_outpath=`realpath $g_outpath`
+    g_outpath=`readlink -f $g_outpath`
 fi
 
 source $rundir/set_env.sh
@@ -240,7 +240,7 @@ source $rundir/paths.sh
 
 if [ "$targetseqfile" != "" -o "$pathprofile" != ""  ];then
     if [ "$targetseqfile" != "" ];then
-        targetseqfile=`realpath $targetseqfile`
+        targetseqfile=`readlink -f $targetseqfile`
         if [ ! -s "$targetseqfile" ];then
             echo "The target sequence file \"$targetseqfile\" is supplied, but it does not exist or empty. " >&2
             exit 1
