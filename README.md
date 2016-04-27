@@ -45,7 +45,7 @@ path)
 3. Set the $DB variable in ./bin/run_all_external.pl to a formated sequence database e.g. uniref90. 
 If you don't have a formatted sequence database follow these steps:
 
-    1. Download the database into an empty directory using command `wget ft2://ftp.ebi.ac.uk/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz`
+    1. Download the database into an empty directory using command `wget ftp.ebi.ac.uk/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz`
 
     2. Extract the files using command `gunzip uniref90.fasta.gz`
 
