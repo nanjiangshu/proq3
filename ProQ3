@@ -7,7 +7,6 @@
 SCRIPT_NAME=`basename $0`
 PROQ3_DIR=`dirname $0`
 
-source $PROQ3_DIR/set_env.sh
 source $PROQ3_DIR/paths.sh       # Read in paths 
 
 function usage {

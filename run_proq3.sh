@@ -2,7 +2,7 @@
 
 # Filename: run_proq3.sh
 # Description: Run Proq3 by given the PDB model
-# Author: Nanjiang Shu (nanjiang.shu@scilifelab.se)
+# Authors: Nanjiang Shu (nanjiang.shu@scilifelab.se), Karolis Uziela (karolis.uziela@scilifelab.se), Björn Wallner (bjornw@ifm.liu.se)
 
 SCRIPT_PATH=`readlink -f ${BASH_SOURCE[0]}`
 rundir=`dirname $SCRIPT_PATH`
@@ -10,11 +10,13 @@ progname=`basename $0`
 size_progname=${#progname}
 wspace=`printf "%*s" $size_progname ""` 
 usage="
-Usage:  $progname PDB-model [PDB-model ...] [-l PDB-model-LISTFILE] 
+Usage:  $progname PDB-model [PDB-model ...] [-l PDB-model-LISTFILE ...] 
         $wspace [-fasta seqfile]
         $wspace [-profile pathprofile]
-        $wspace [-outpath DIR]  [-q]
+        $wspace [-outpath DIR]
         $wspace [-only-build-profile]
+        $wspace [-q] [-verbose] [-h]
+        $wspace [-r] [-t] [-k]
 
 Description:
     Run ProQ3 given one or several PDB-models 
@@ -23,18 +25,19 @@ Description:
     PDB-models should be a subset of this target sequence.
 
 Options:
-  -fasta   FILE     Set the target sequence in FASTA format
-  -profile  STR     Path for pre-built profile
-  -outpath  DIR     Set output path, (default: the same as model file)
-  -l       FILE     Set the file containing paths of PDB-models, one model per line
-  -q                Quiet mode
-  -verbose          Run script in verbose mode
-  -h, --help        Print this help message and exit
+  -l       FILE        Set the file containing paths of PDB-models, one model per line
+  -fasta   FILE        Set the target sequence in FASTA format
+  -profile  STR        Path for pre-built profile
+  -outpath  DIR        Set output path, (default: the same as model file)
+  -only-build-profile  Build sequence profile without running ProQ3
+  -q                   Quiet mode
+  -verbose             Run script in verbose mode
+  -h, --help           Print this help message and exit
 
 ProQ3 options:
-  -r  yes|no        Whether to perform the side chain repacking (default: yes)
-  -t     INT        Set the target length (default: length of the target sequence or model)
-  -k  yes|no        Whether keep repacked models and SVM output (default: no)
+  -r  yes|no           Whether to perform the side chain repacking (default: yes)
+  -t     INT           Set the target length (default: length of the target sequence or model)
+  -k  yes|no           Whether keep repacked models and SVM output (default: no)
 
 Examples:
    # run ProQ3 for given just a model structure
@@ -46,7 +49,8 @@ Examples:
    # run ProQ3 for two model structures with pre-built profile
    $progname -profile test/profile/1e12A.fasta test/1e12A_0001.pdb test/1e12A_0001.subset.pdb -outpath test/out4
 
-Created 2016-01-28, updated 2016-02-05, Nanjiang Shu
+Created 2016-01-28, updated 2016-04-26
+Authors: Nanjiang Shu (nanjiang.shu@scilifelab.se), Karolis Uziela (karolis.uziela@scilifelab.se), Björn Wallner (bjornw@ifm.liu.se)
 
 
 "
@@ -235,7 +239,6 @@ if [ "$g_outpath" != "" ] ; then
     g_outpath=`readlink -f $g_outpath`
 fi
 
-source $rundir/set_env.sh
 source $rundir/paths.sh
 
 if [ "$targetseqfile" != "" -o "$pathprofile" != ""  ];then

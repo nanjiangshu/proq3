@@ -7,7 +7,7 @@ Björn Wallner (bjornw@ifm.liu.se)
 
 Nanjiang Shu (nanjinag.shu@scilifelab.se)
 
-Last updated: 2016-03-03
+Last updated: 2016-04-26
 
 ## Requirements
 
@@ -36,13 +36,12 @@ packages are available here:
 
 Steps you need to do to install ProQ3 (order does not matter):
 
-1. Set paths to Rosetta binary directory and Rosetta database in ./paths.sh (you can skip this step 
-if $ROSETTA3 and $ROSETTA3_DB evnironment variables are already set)
+1. Set "rosetta_path" variable to point to Rosetta installation direcotry in ./paths.sh
 
 2. Set path to Rscript binary in ./paths.sh (you can skip this step if Rscript is already in your 
 path)
 
-3. Set the $DB variable in ./bin/run_all_external.pl to a formated sequence database e.g. uniref90. 
+3. Set the $BLAST_DATABASE variable in ./paths.sh to point to a formated sequence database e.g. uniref90. 
 If you don't have a formatted sequence database follow these steps:
 
     1. Download the database into an empty directory using command `wget ftp.ebi.ac.uk/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz`
@@ -73,24 +72,17 @@ explained below.
 
 ## Easy run of ProQ3
 The simplest way to run ProQ3 is using the script `run_proq3.sh`
-before running this script, copy the file `set_env.example.sh` to `set_env.sh`
-and set the environmental variables accordingly. That is
-
-    $ cp set_env.example.sh set_env.sh
-
-and then change variables `rosetta_path` and `BLAST_DATABASE` to the actual
-locations in your system.
-
-After that, you can run the script `run_proq3.sh` given your model files in PDB format.
 
 The syntax of `run_proq3.sh` is
 
 ```
-Usage:  run_proq3.sh PDB-model [PDB-model ...] [-l PDB-model-LISTFILE] 
+Usage:  run_proq3.sh PDB-model [PDB-model ...] [-l PDB-model-LISTFILE ...] 
                      [-fasta seqfile]
                      [-profile pathprofile]
-                     [-outpath DIR]  [-q]
+                     [-outpath DIR]
                      [-only-build-profile]
+                     [-q] [-verbose] [-h]
+                     [-r] [-t] [-k]
 
 Description:
     Run ProQ3 given one or several PDB-models 
@@ -99,18 +91,19 @@ Description:
     PDB-models should be a subset of this target sequence.
 
 Options:
-  -fasta   FILE     Set the target sequence in FASTA format
-  -profile  STR     Path for pre-built profile
-  -outpath  DIR     Set output path, (default: the same as model file)
-  -l       FILE     Set the file containing paths of PDB-models, one model per line
-  -q                Quiet mode
-  -verbose          Run script in verbose mode
-  -h, --help        Print this help message and exit
+  -l       FILE        Set the file containing paths of PDB-models, one model per line
+  -fasta   FILE        Set the target sequence in FASTA format
+  -profile  STR        Path for pre-built profile
+  -outpath  DIR        Set output path, (default: the same as model file)
+  -only-build-profile  Build sequence profile without running ProQ3
+  -q                   Quiet mode
+  -verbose             Run script in verbose mode
+  -h, --help           Print this help message and exit
 
 ProQ3 options:
-  -r  yes|no        Whether to perform the side chain repacking (default: yes)
-  -t     INT        Set the target length (default: length of the target sequence or model)
-  -k  yes|no        Whether keep repacked models and SVM output (default: no)
+  -r  yes|no           Whether to perform the side chain repacking (default: yes)
+  -t     INT           Set the target length (default: length of the target sequence or model)
+  -k  yes|no           Whether keep repacked models and SVM output (default: no)
 ```
 
 ###Example commands for using the script `run_proq3.sh`
@@ -128,10 +121,28 @@ ProQ3 options:
 
         $ run_proq3.sh -profile test/profile/1e12A.fasta test/1e12A_0001.pdb test/1e12A_0001.subset.pdb -outpath test/out4
 
+###Output files
+
+The default output files are:
+
+    * [pdb-model].proq3.local - local scores (per residue)
+
+    * [pdb-model].proq3.global - global scores (the predicted quality of the whole model)
+
+Both local and global score files will contain 4 columns:
+
+1. ProQ2 - ProQ2 prediction (as in the original ProQ2, but retrained on CASP9 data)
+
+2. ProQ_lowres - ProQ predictions that are based on Rosetta low resolution (centroid) energy 
+functions
+
+3. ProQ_highres - ProQ predictions that are based on Rosetta high resolution (full-atom) energy functions
+
+4. ProQ3 - ProQ3 predictions that combine all three of the above predictions
 
 
-##Alternative ways to run ProQ3, separate profile building and model scroing
-###Before runing PROQ3
+## An alternative way to run ProQ3, separate profile building and model scoring
+###Building profile before running PROQ3
 
 ProQ3 is Model Quality Assessment Program that predictis the quality of individual models. To do 
 this ProQ3 uses both information that can be calculated from the 3D coordinates of the model as 
@@ -183,7 +194,7 @@ sequence specific features needs to be calculated.
         $ ./ProQ3/bin/copy_features_from_master.pl [third-pdb-model] [target-sequence-fasta]
 etc.
 
-###Runing proq3
+###Running PROQ3 with pre-built profile
 
 Now you are ready to run ProQ3. Type 
 
@@ -210,28 +221,11 @@ Usage: ProQ3 [parameters]
                              The output file with Rosetta logs
 ```
 
-The most basic usage is:
+The basic usage is:
 
     $ ./ProQ3 [pdb-model]
 
 This will will perform the side-chain repacking step and run ProQ3 on the input model. 
-
-The default output files are:
-
-    * [pdb-model].proq3.local - local scores (per residue)
-
-    * [pdb-model].proq3.local - global scores (the predicted quality of the whole model)
-
-Both local and global score files will contain 4 columns:
-
-1. ProQ2 - ProQ2 prediction (as in the original ProQ2, but retrained on CASP9 data)
-
-2. ProQ_lowres - ProQ predictions that are based on Rosetta low resolution (centroid) energy 
-functions
-
-3. ProQ_highres - ProQ predictions that are based on Rosetta high resolution energy functions
-
-4. ProQ3 - ProQ3 predictions that combine all three of the above predictions
 
 Other options explained in more detail:
 
