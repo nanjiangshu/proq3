@@ -93,6 +93,15 @@ if [[ $MODEL == "" ]] ; then
 elif [[ ! -f $MODEL  ]] ; then
     echo "ERROR: model file $MODEL does not exist"
     usage
+elif [[  ${MODEL: -4} != ".pdb" ]] ; then
+    echo "WARNING: input file does not have .pdb extension. Creating a copy of input file with .pdb extension..."
+    cp $MODEL $MODEL.pdb
+    for ext in psi mtx ss2 acc ; do
+        if [[ -f $MODEL.$ext && ! -f $MODEL.pdb.$ext ]] ; then
+            cp $MODEL.$ext $MODEL.pdb.$ext
+        fi
+    done
+    MODEL=$MODEL.pdb
 fi
 
 if [[ $TARGET_LENGTH != "" ]] ; then
