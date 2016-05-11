@@ -190,7 +190,7 @@ if [[ ! -f $MODEL$R ]] ; then
     $ROSETTA_BIN/relax.linuxgccrelease -database $ROSETTA_DB -in:file:fullatom -out:file:silent_struct_type binary -nstruct $REPACK_ITERATIONS -relax:script $PROQ3_DIR/ProQ3_scripts/repack_min.script -in:file:s $MODEL -out:file:silent $MODEL$R.silent -relax:constrain_relax_to_start_coords -ignore_zero_occupancy F >>$ROSETTA_LOG
     if [[ -f $MODEL$R.silent ]] ; then
         to_extract=`grep ^SCORE $MODEL$R.silent | tail -n +2 | sort -n -k2 | head -n 1 | awk '{print $(NF)}'`
-        $ROSETTA_BIN/extract_pdbs.linuxgccrelease -database $ROSETTA_DB -in:file:silent $MODEL$R.silent -in::file::tags $to_extract -out::prefix $MODEL_DIR/ >>$ROSETTA_LOG
+        $ROSETTA_BIN/extract_pdbs.linuxgccrelease -database $ROSETTA_DB -in:file:silent $MODEL$R.silent -in::file::tags $to_extract -out::prefix $MODEL_DIR/ -ignore_zero_occupancy F >>$ROSETTA_LOG
         mv $MODEL_DIR/$to_extract.pdb $MODEL$R
         if [[ $DEBUG == "no" ]] ; then
             rm $MODEL$R.silent
