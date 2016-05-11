@@ -187,7 +187,7 @@ REPACK_ITERATIONS=1
 
 if [[ ! -f $MODEL$R ]] ; then
     echo "------------------- Repacking the side chains -----------------"
-    $ROSETTA_BIN/relax.linuxgccrelease -database $ROSETTA_DB -in:file:fullatom -out:file:silent_struct_type binary -nstruct $REPACK_ITERATIONS -relax:script $PROQ3_DIR/ProQ3_scripts/repack_min.script -in:file:s $MODEL -out:file:silent $MODEL$R.silent -relax:constrain_relax_to_start_coords >>$ROSETTA_LOG
+    $ROSETTA_BIN/relax.linuxgccrelease -database $ROSETTA_DB -in:file:fullatom -out:file:silent_struct_type binary -nstruct $REPACK_ITERATIONS -relax:script $PROQ3_DIR/ProQ3_scripts/repack_min.script -in:file:s $MODEL -out:file:silent $MODEL$R.silent -relax:constrain_relax_to_start_coords -ignore_zero_occupancy F >>$ROSETTA_LOG
     if [[ -f $MODEL$R.silent ]] ; then
         to_extract=`grep ^SCORE $MODEL$R.silent | tail -n +2 | sort -n -k2 | head -n 1 | awk '{print $(NF)}'`
         $ROSETTA_BIN/extract_pdbs.linuxgccrelease -database $ROSETTA_DB -in:file:silent $MODEL$R.silent -in::file::tags $to_extract -out::prefix $MODEL_DIR/ >>$ROSETTA_LOG
@@ -215,7 +215,7 @@ if [[ ! -f $MODEL$R$M ]] ; then
     echo "------------------- Minimizing energies -------------------"
     cd $MODEL_DIR
     /bin/ls $BASE.pdb$R > $BASE.pdb$R.list
-    $ROSETTA_BIN/minimize_with_cst.linuxgccrelease -in:file:l $BASE.pdb$R.list -in:file:fullatom -ddg::out_pdb_prefix minimized_${BASE}_$$ -database $ROSETTA_DB -ddg:min_cst >>$ROSETTA_LOG # Different Rosetta releases name output files differently. Better be careful and add a long prefix to be sure
+    $ROSETTA_BIN/minimize_with_cst.linuxgccrelease -in:file:l $BASE.pdb$R.list -in:file:fullatom -ddg::out_pdb_prefix minimized_${BASE}_$$ -database $ROSETTA_DB -ddg:min_cst -ignore_zero_occupancy F >>$ROSETTA_LOG # Different Rosetta releases name output files differently. Better be careful and add a long prefix to be sure
     mv minimized_${BASE}_$$* $BASE.pdb$R$M    
     if [[ $DEBUG == "no" ]] ; then
         rm $BASE.pdb$R.list
@@ -225,9 +225,9 @@ fi
 
 if [[ ! -f $MODEL$R$M.score.$$.temp ]] ; then
     echo "------------------- Calculating Rosetta energies -------------------"
-    $ROSETTA_BIN/per_residue_energies.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp -score:weights $PROQ3_DIR/weights/talaris2013.wts >>$ROSETTA_LOG
-    $ROSETTA_BIN/per_residue_energies.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp2 -score:weights $PROQ3_DIR/weights/some_centroid.wts -in:file:residue_type_set centroid >>$ROSETTA_LOG
-    $ROSETTA_BIN/score.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp3 -score:weights $PROQ3_DIR/weights/global_centroid.wts -in:file:residue_type_set centroid >>$ROSETTA_LOG
+    $ROSETTA_BIN/per_residue_energies.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp -score:weights $PROQ3_DIR/weights/talaris2013.wts -ignore_zero_occupancy F >>$ROSETTA_LOG
+    $ROSETTA_BIN/per_residue_energies.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp2 -score:weights $PROQ3_DIR/weights/some_centroid.wts -in:file:residue_type_set centroid -ignore_zero_occupancy F >>$ROSETTA_LOG
+    $ROSETTA_BIN/score.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp3 -score:weights $PROQ3_DIR/weights/global_centroid.wts -in:file:residue_type_set centroid -ignore_zero_occupancy F >>$ROSETTA_LOG
 fi
 
 if [[ ! -f $MODEL$R.proq3.svm ]] ; then
