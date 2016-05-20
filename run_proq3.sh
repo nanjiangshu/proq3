@@ -82,7 +82,7 @@ exec_cmd(){ #{{{
     eval "$*"
 }
 #}}}
-RunProQ3_with_profile(){ #{{{
+RunProQ3_with_profile(){ 
     # not finished
     local modelfile="$1"
     if [ ! -s "$modelfile" ];then
@@ -105,14 +105,15 @@ RunProQ3_with_profile(){ #{{{
     fi
     exec_cmd "$rundir/bin/copy_features_from_master.pl $modelfile $workingseqfile"
     cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles"
-    if [ "$targetlength" != "" ];then
-        cmd="$cmd -t $targetlength"
+    if [ "$targetlength" == "" ];then
+        targetlength=`tail -n +2 $workingseqfile | tr -d "\n" | wc -c`
     fi
+    cmd="$cmd -t $targetlength"
     exec_cmd "$cmd"
-    echo "ProQ3 run for $modelfile"
+    echo "ProQ3 run finished for $modelfile"
 }
-#}}}
-RunProQ3_without_profile(){ #{{{
+
+RunProQ3_without_profile(){ 
     local modelfile="$1"
     if [ ! -s "$modelfile" ];then
         echo "modelfile \"$modelfile\" is empty or does not exist. Ignore" >&2
@@ -141,9 +142,9 @@ RunProQ3_without_profile(){ #{{{
         fi
         exec_cmd "$cmd"
     fi
-    echo "ProQ3 run for $modelfile"
+    echo "ProQ3 run finished for $modelfile"
 }
-#}}}
+
 
 if [ $# -lt 1 ]; then
     PrintHelp
