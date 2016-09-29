@@ -20,7 +20,7 @@ Usage: $SCRIPT_NAME [parameters]
 -t/--target_length       [Number_of_residues] default='model_length'
                              The global score is calculated as sum_of_local/target_length
 -k/--keep_files          [yes/no] default=no 
-                             Should we keep the repacked models and svm input files?
+                             Should we keep the repacked models, svm input files and psiblast files?
 -l/--local_output        [output_file_local] default=[pdb-model].proq3.local
                              The output file for local predictions
 -g/--global_output       [output_file_global] default=[pdb-model].proq3.global
@@ -169,6 +169,16 @@ if [[ ! -f $MODEL.ss2 || ! -f $MODEL.acc || ! -f $MODEL.psi || ! -f $MODEL.mtx ]
     exit 1
 fi
 
+# Filter out HETATM records
+hetatm=`grep "HETATM" $MODEL | wc -l`
+if [[ "$hetatm" != "0" ]] ; then
+    grep -v "HETATM" $MODEL > ${MODEL}.no_hetatm.pdb
+    for ext in psi mtx ss2 acc ; do
+        cp $MODEL.$ext ${MODEL}.no_hetatm.pdb.$ext
+    done
+    MODEL=${MODEL}.no_hetatm.pdb
+fi
+
 if [[ $R == ".repacked" ]] ; then
     if [ ! -f $MODEL$R.ss2 ] ; then
         cp $MODEL.ss2 $MODEL$R.ss2
@@ -177,6 +187,7 @@ if [[ $R == ".repacked" ]] ; then
         cp $MODEL.mtx $MODEL$R.mtx
     fi
 fi
+
 
 # -------------------------------- Main script --------------------------------------- #
 
@@ -272,9 +283,19 @@ if [[ ! -f $GLOBAL_OUT ]] ; then
     fi
 fi
 
+if [[ "$hetatm" != "0" ]] ; then
+    rm ${MODEL} # remove <model>.pdb.no_hetatm.pdb
+fi
+
 if [[ $KEEP == "no" ]] && [[ $DEBUG == "no" ]] ; then
     if [[ $R == ".repacked" ]] ; then
         rm $MODEL$R $MODEL$R$M $MODEL$R.ss2 $MODEL$R.acc $MODEL$R.psi $MODEL$R.mtx
     fi
-    rm $MODEL$R.proq3.svm $MODEL$R.proq2.svm $MODEL$R.highres.svm $MODEL$R.lowres.svm
+    rm $MODEL$R.proq3.svm $MODEL$R.proq2.svm $MODEL$R.highres.svm $MODEL$R.lowres.svm $MODEL.ss2 $MODEL.acc $MODEL.psi $MODEL.mtx
+elif [[ "$hetatm" != "0" ]] ; then
+    for i in ${MODEL}* ; do
+        newname=`echo $i | sed -e 's/.no_hetatm.pdb//'` # move <model>.pdb.no_hetatm.pdb.repacked to <model>.pdb.repacked and so on
+        mv $i $newname
+    done
 fi
+
