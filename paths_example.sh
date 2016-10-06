@@ -8,6 +8,7 @@ ROSETTA_DB=${rosetta_path}/main/database                                # The di
 export BLAST_DATABASE=/scratch3/uziela/data_sets/uniref/uniref90.fasta  # Path to formatted blast database (such as uniref90)
 
 R_SCRIPT=""                                                             # The variable should point to "Rscript" executable (you can leave it empty if R and Rscript is already in your path)
+PYTHON_BIN=""                                                           # The variable should point to python executable (you can leave it empty if python is already in your path)
 
 ############# Here we check if the paths are set correctly. Don't modify this part. #############
 
@@ -26,6 +27,8 @@ Rscript_path=`which Rscript 2>/dev/null`
 if [[ $Rscript_path == "" && ! -f $R_SCRIPT ]] ; then
     echo "ERROR: Rscript executable is not found. Make sure it is in your path or set \$R_SCRIPT variable in <ProQ3_dir>/paths.sh file."
     exit 1
+elif [[ "$R_SCRIPT" == "" ]] ; then
+    R_SCRIPT=$Rscript_path
 fi
 
 needle_path=`which needle 2>/dev/null`
@@ -33,3 +36,27 @@ if [[ $needle_path == "" ]] ; then
     echo "ERROR: Package EMBOSS has not been installed properly. Please, download it from http://emboss.sourceforge.net/download/ and install it. Make sure that 'needle' program is in your path."
     exit 1
 fi
+
+DEEP_INSTALLED="yes"
+python_path=`which python 2>/dev/null`
+
+if [[ $python_path == "" && ! -f $PYTHON_BIN ]] ; then
+    echo "WARNING: python executable is not found. Make sure it is in your path or set \$PYTHON_BIN variable in <ProQ3_dir>/paths.sh file. Otherwise you will not be able to use deep learning version of the predictor (ProQ3D)"
+    DEEP_INSTALLED="no"
+elif [[ "$PYTHON_BIN" == "" ]] ; then
+    PYTHON_BIN=$python_path
+fi
+
+if [[ -f $PYTHON_BIN ]] ; then
+    $PYTHON_BIN -c "import keras" &>/dev/null
+    if [[ "$?" == "1" ]] ; then
+        echo "WARNING: python package 'keras' is not installed. Please install the package using 'pip install keras'. Otherwise you will not be able to use deep learning version of the predictor (ProQ3D)"
+        DEEP_INSTALLED="no"
+    fi
+    $PYTHON_BIN -c "import numpy" &>/dev/null
+    if [[ "$?" == "1" ]] ; then
+        echo "WARNING: python package 'numpy' is not installed. Please install the package using 'pip install numpy'. Otherwise you will not be able to use deep learning version of the predictor (ProQ3D)"
+        DEEP_INSTALLED="no"
+    fi
+fi
+

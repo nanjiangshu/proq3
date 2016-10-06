@@ -13,10 +13,11 @@ usage="
 Usage:  $progname PDB-model [PDB-model ...] [-l PDB-model-LISTFILE ...] 
         $wspace [-fasta seqfile]
         $wspace [-profile pathprofile]
-        $wspace [-outpath DIR]
         $wspace [-only-build-profile]
+        $wspace [-outpath DIR]
+        $wspace [-keep_files] [-debug_mode]
+        $wspace [-deep] [-repack] [-target_length]
         $wspace [-q] [-verbose] [-h]
-        $wspace [-r] [-t] [-k]
 
 Description:
     Run ProQ3 given one or several PDB-models 
@@ -24,34 +25,49 @@ Description:
     calculated only once based on this given sequences, the sequences of all
     PDB-models should be a subset of this target sequence.
 
-Options:
+Input/Output options:
   -l       FILE        Set the file containing paths of PDB-models, one model per line
   -fasta   FILE        Set the target sequence in FASTA format
   -profile  STR        Path for pre-built profile
-  -outpath  DIR        Set output path, (default: the same as model file)
   -only-build-profile  Build sequence profile without running ProQ3
+  -outpath  DIR        Set output path, (default: the same as model file)
+  -keep_files  yes|no  Whether to keep repacked models and SVM output (default: no)
+  -debug_mode  yes|no  Whether to keep all temporary files
+
+ProQ3 predictor options:
+  -deep  yes|no        Whether to use Deep Learning (Theano) instead of SVM. If 'yes' runs ProQ3D (default: no)
+  -repack  yes|no      Whether to perform the side chain repacking (default: yes)
+  -target_length  INT  Set the target length by which the global scores will be normalized (default: length of the target sequence or model)
+
+Other options:
   -q                   Quiet mode
   -verbose             Run script in verbose mode
   -h, --help           Print this help message and exit
-
-ProQ3 options:
-  -r  yes|no           Whether to perform the side chain repacking (default: yes)
-  -t     INT           Set the target length (default: length of the target sequence or model)
-  -k  yes|no           Whether keep repacked models and SVM output (default: no)
-
+    
 Examples:
-   # run ProQ3 for given just a model structure
-   $progname test/1e12A_0001.pdb -outpath test/out1
+   # run ProQ3 for a given model structure (see NOTE below)
+   $progname tests_clean/1e12A_0001.pdb -outpath test_out1
 
-   # run ProQ3 for two model structures by given the amino acid sequence of the target
-   $progname -fasta test/1e12A.fasta test/1e12A_0001.pdb test/1e12A_0001.subset.pdb -outpath test/out2
+   # run ProQ3 for two model structures with a given the amino acid sequence of the target
+   $progname -fasta tests_clean/1e12A.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out2
 
-   # run ProQ3 for two model structures with pre-built profile
-   $progname -profile test/profile/1e12A.fasta test/1e12A_0001.pdb test/1e12A_0001.subset.pdb -outpath test/out4
+   # run ProQ3D for two model structures with pre-built profile
+   $progname -profile tests_clean/profile/1e12A.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes
 
-Created 2016-01-28, updated 2016-04-26
-Authors: Nanjiang Shu (nanjiang.shu@scilifelab.se), Karolis Uziela (karolis.uziela@scilifelab.se), Björn Wallner (bjornw@ifm.liu.se)
+   # run ProQ3D for a list of models with pre-built profile and without repacking
+   $progname -profile tests_clean/profile/1e12A.fasta -l tests_clean/model_list.txt tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes -repack no
 
+NOTE: It is always recommended to provide full target sequence or pre-built target profile (-fasta or -profile) options.
+Some of the pdb models do not model all residues in the target. If the model is shorter than the target and you don't provide
+the full target sequence, the global scores will be incorrectly normalized and this might also affect psiblast results.
+However, if you are sure that the model has full amino acid sequence, or if the full sequence is not available,
+you can run ProQ3 just by providing the pdb model as in the first example.
+   
+Created 2016-01-28, updated 2016-10-05
+
+Authors: Karolis Uziela (karolis.uziela@gmail.com), David Menéndez Hurtado (david.menendez.hurtado@scilifelab.se), Nanjiang Shu (nanjiang.shu@scilifelab.se), Björn Wallner (bjornw@ifm.liu.se), Arne Elofsson (arne@bioinfo.se)
+
+Cite: Uziela K, Shu N, Wallner B, Elofsson A (2016) 'ProQ3: Improved model quality assessments using Rosetta energy terms.' SciRep 6, 33509
 
 "
 PrintHelp(){ #{{{
@@ -104,7 +120,7 @@ RunProQ3_with_profile(){
         modelfile=$outpath/$basename_modelfile
     fi
     exec_cmd "$rundir/bin/copy_features_from_master.pl $modelfile $workingseqfile"
-    cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles"
+    cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug"
     if [ "$targetlength" == "" ];then
         targetlength=`tail -n +2 $workingseqfile | tr -d "\n" | wc -c`
     fi
@@ -136,7 +152,7 @@ RunProQ3_without_profile(){
     exec_cmd "$rundir/bin/run_all_external.pl -pdb $modelfile"
 
     if [ $isOnlyBuildProfile -eq 0 ]; then
-        cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles"
+        cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug"
         if [ "$targetlength" != "" ];then
             cmd="$cmd -t $targetlength"
         fi
@@ -158,6 +174,8 @@ modelListFile=
 modelList=()
 targetseqfile=
 isRepack=yes
+isDeep=no
+isDebug=no
 isKeepFiles=no
 targetLength=
 verbose=0
@@ -185,21 +203,41 @@ while [ "$1" != "" ]; do
                 elif [ "$optstr" == "no" ];then
                     isRepack=no
                 else
-                    echo "Bad argument \"$optstr\" after the option -r, should be yes or no" >&2
+                    echo "Bad argument \"$optstr\" after the option -repack, should be yes or no" >&2
                     exit 1
                 fi
                 shift;;
-            -k|-keep-files|--keep-files)optstr=$2;
+            -d|-deep|--deep)optstr=$2;
+                if [ "$optstr" == "yes" ]; then
+                    isDeep=yes
+                elif [ "$optstr" == "no" ];then
+                    isDeep=no
+                else
+                    echo "Bad argument \"$optstr\" after the option -deep, should be yes or no" >&2
+                    exit 1
+                fi
+                shift;; 
+            -debug_mode|--debug_mode)optstr=$2;
+                if [ "$optstr" == "yes" ]; then
+                    isDebug=yes
+                elif [ "$optstr" == "no" ];then
+                    isDebug=no
+                else
+                    echo "Bad argument \"$optstr\" after the option -debug_mode, should be yes or no" >&2
+                    exit 1
+                fi
+                shift;;  
+            -k|-keep_files|--keep_files)optstr=$2;
                 if [ "$optstr" == "yes" ]; then
                     isKeepFiles=yes
                 elif [ "$optstr" == "no" ];then
                     isKeepFiles=no
                 else
-                    echo "Bad argument \"$optstr\" after the option -k, should be yes or no" >&2
+                    echo "Bad argument \"$optstr\" after the option -keep_files, should be yes or no" >&2
                     exit 1
                 fi
                 shift;;
-            -t|-targetlength|--targetlength) targetlength=$2;shift;;
+            -t|-target_length|--target_length) targetlength=$2;shift;;
             -verbose|--verbose) verbose=1;;
             -only-build-profile|--only-build-profile) isOnlyBuildProfile=1;;
             -*) echo Error! Wrong argument: $1 >&2; exit;;

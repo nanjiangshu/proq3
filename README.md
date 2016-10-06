@@ -1,13 +1,17 @@
-#ProQ3
+#ProQ3/ProQ3D
 
 ###Authors: 
-Karolis Uziela (karolis.uziela@scilifelab.se)
+Karolis Uziela (karolis.uziela@gmail.com)
 
-Björn Wallner (bjornw@ifm.liu.se)
+David Menéndez Hurtado (david.menendez.hurtado@scilifelab.se)
 
 Nanjiang Shu (nanjinag.shu@scilifelab.se)
 
-Last updated: 2016-04-26
+Björn Wallner (bjornw@ifm.liu.se)
+
+Arne Elofsson (arne@bioinfo.se)
+
+Last updated: 2016-10-05
 
 ## Requirements
 
@@ -32,6 +36,14 @@ packages are available here:
 
     * SVM_light http://download.joachims.org/svm_light/current/svm_light_linux64.tar.gz
 
+If you would like to use the deep learning version of the predictor (ProQ3D), there are a few additional requirements:
+
+1. Python installation (Python 2.7-3.5)
+
+2. Python numpy package
+
+3. Python keras package
+
 ## Installation
 
 Firstly, rename the file ./paths_example.sh to ./paths.sh
@@ -40,8 +52,7 @@ Then follow these steps to install ProQ3 (the order does not matter):
 
 1. Set "rosetta_path" variable to point to Rosetta installation direcotry in ./paths.sh
 
-2. Set path to Rscript binary in ./paths.sh (you can skip this step if Rscript is already in your 
-path)
+2. Set path to Rscript binary in ./paths.sh (you can skip this step if Rscript is already in your path)
 
 3. Set the $BLAST_DATABASE variable in ./paths.sh to point to a formated sequence database e.g. uniref90. 
 If you don't have a formatted sequence database follow these steps:
@@ -61,6 +72,14 @@ uniref90.fasta
 
 6. Run ./configure.pl
 
+If you would like to use the deep learning version of the predictor (ProQ3D), there are a few additional steps:
+
+1. Set path to python executable in ./paths.sh (you can skip this step if "python" is already in your path)
+
+2. If you don't have "numpy" package, install it by typing `pip install numpy`
+
+3. If you don't have "keras" package, install it by typing `pip install keras`
+
 ##Test run
 
 Go to ProQ3 installation directory and type 
@@ -68,23 +87,24 @@ Go to ProQ3 installation directory and type
     $ ./run_test.sh
 
 to perform the test run. It should 
-complete without any errors. The tests are run with `-k/--keep_files` option, so they output a little 
+complete without any errors. The tests are run with `--debug_mode` option, so they output a little 
 bit more files than usual. The most interesting output is in `*.local` and `*.global` files as 
 explained below.
 
-## Easy run of ProQ3
+## Running ProQ3/ProQ3D
 The simplest way to run ProQ3 is using the script `run_proq3.sh`
 
 The syntax of `run_proq3.sh` is
 
 ```
-Usage:  run_proq3.sh PDB-model [PDB-model ...] [-l PDB-model-LISTFILE ...] 
+Usage:  run_proq3.sh PDB-model [PDB-model ...] [-l PDB-model-LISTFILE ...]
                      [-fasta seqfile]
                      [-profile pathprofile]
-                     [-outpath DIR]
                      [-only-build-profile]
+                     [-outpath DIR]
+                     [-keep_files] [-debug_mode]
+                     [-deep] [-repack] [-target_length]
                      [-q] [-verbose] [-h]
-                     [-r] [-t] [-k]
 
 Description:
     Run ProQ3 given one or several PDB-models 
@@ -92,36 +112,50 @@ Description:
     calculated only once based on this given sequences, the sequences of all
     PDB-models should be a subset of this target sequence.
 
-Options:
+Input/Output options:
   -l       FILE        Set the file containing paths of PDB-models, one model per line
   -fasta   FILE        Set the target sequence in FASTA format
   -profile  STR        Path for pre-built profile
-  -outpath  DIR        Set output path, (default: the same as model file)
   -only-build-profile  Build sequence profile without running ProQ3
+  -outpath  DIR        Set output path, (default: the same as model file)
+  -keep_files  yes|no  Whether to keep repacked models and SVM output (default: no)
+  -debug_mode  yes|no  Whether to keep all temporary files
+
+ProQ3 predictor options:
+  -deep  yes|no        Whether to use Deep Learning (Theano) instead of SVM. If 'yes' runs ProQ3D (default: no)
+  -repack  yes|no      Whether to perform the side chain repacking (default: yes)
+  -target_length  INT  Set the target length by which the global scores will be normalized (default: length of the target sequence or model)
+
+Other options:
   -q                   Quiet mode
   -verbose             Run script in verbose mode
   -h, --help           Print this help message and exit
-
-ProQ3 options:
-  -r  yes|no           Whether to perform the side chain repacking (default: yes)
-  -t     INT           Set the target length (default: length of the target sequence or model)
-  -k  yes|no           Whether keep repacked models and SVM output (default: no)
 ```
 
 ###Example commands for using the script `run_proq3.sh`
-   * run ProQ3 given just a model structure
+   * run ProQ3 for a given model structure (see NOTE below)
 
-        $ run_proq3.sh test/1e12A_0001.pdb -outpath test/out1
-
-
-   * run ProQ3 for two model structures by given the amino acid sequence of the target
-
-        $ run_proq3.sh -fasta test/1e12A.fasta test/1e12A_0001.pdb test/1e12A_0001.subset.pdb -outpath test/out2
+        $ run_proq3.sh tests_clean/1e12A_0001.pdb -outpath test_out1
 
 
-   * run ProQ3 for two model structures with pre-built profile
+   * run ProQ3 for two models structures with a given the amino acid sequence of the target
 
-        $ run_proq3.sh -profile test/profile/1e12A.fasta test/1e12A_0001.pdb test/1e12A_0001.subset.pdb -outpath test/out4
+        $ run_proq3.sh -fasta tests_clean/1e12A.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out2
+
+
+   * run ProQ3D for two model structures with pre-built profile
+
+        $ -profile tests_clean/profile/1e12A.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes
+
+   * run ProQ3D for a list of models with pre-built profile and without repacking
+
+        $ -profile tests_clean/profile/1e12A.fasta -l tests_clean/model_list.txt tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes -repack no
+
+NOTE: It is always recommended to provide full target sequence or pre-built target profile (-fasta or -profile) options.
+Some of the pdb models do not model all residues in the target. If the model is shorter than the target and you don't provide
+the full target sequence, the global scores will be incorrectly normalized and this might also affect psiblast results.
+However, if you are sure that the model has full amino acid sequence, or if the full sequence is not available, 
+you can run ProQ3 just by providing the pdb model as in the first example.
 
 ###Output files
 
@@ -135,112 +169,61 @@ Both local and global score files will contain 4 columns:
 
 1. ProQ2 - ProQ2 prediction (as in the original ProQ2, but retrained on CASP9 data)
 
-2. ProQ_lowres - ProQ predictions that are based on Rosetta low resolution (centroid) energy 
+2. ProQRosCen - ProQ predictions that are based on Rosetta low resolution (centroid) energy 
 functions
 
-3. ProQ_highres - ProQ predictions that are based on Rosetta high resolution (full-atom) energy functions
+3. ProQRosFA - ProQ predictions that are based on Rosetta high resolution (full-atom) energy functions
 
 4. ProQ3 - ProQ3 predictions that combine all three of the above predictions
 
+If you are using the deep learning version of the predictor (-deep option), then your output files will have columns
+ProQ2D, ProQRosCenD, ProQRosFAD and ProQ3D which correspond to deep learning version scores.
 
-## An alternative way to run ProQ3, separate profile building and model scoring
-###Building profile before running PROQ3
+If you are only interested in ProQ3/ProQ3D scores, you can simply use the 4th column in [pdb-model].proq3.local and [pdb-model].proq3.global files.
 
-ProQ3 is Model Quality Assessment Program that predictis the quality of individual models. To do 
-this ProQ3 uses both information that can be calculated from the 3D coordinates of the model as 
-well as information that can be predicted from the sequence. Of course the information that comes 
-from the sequence is the same for all models of the same sequence. Thus, before scoring models the 
-sequence specific features needs to be calculated.
+###Options explained in more detail
 
-1. The PDB model spans the whole target sequence
+* PDB-model           You can enter one or more PDB models to be evaluated by ProQ3 in the same run if they share the same target sequence.
 
-    If your pdb model spans the whole sequence of the target protein then you can simply run:
+* -l FILE             Takes text file with a list of pdb files as an input. When you want to run
+ProQ3/ProQ3D for many input pdbs with the same target sequence, it is sometimes more convenient have them as a list in a file.
+For example, you can create a list with a command `ls --color=never tests_clean/*pdb > tests_clean/model_list.txt`
 
-        $ ./bin/run_all_external.pl -pdb [pdb-model]
+* -fasta FILE         This is the target sequence of your pdb model. If you don't provide neither
+this argument nor -profile argument, the target sequence will be extracted from the pdb model itself.
+However, it is always recommended to provide the target sequence. Firstly, if the model does not
+have all amino acids of the target, the global scores will not be correctly normalized unless the target
+length is known. Secondly, if the model is significantly shorter than the target sequence, this might
+affect the psiblast results that are used for RSA, SS and Conservation feature calculation.
 
-    The above will create [pdb-model].ss2, [pdb-model].acc, [pdb-model].psi and
-    [pdb-model].mtx files.  These files contain sequence-specific information
-    that is needed to run ProQ3.
+* -profile FILE       If you have already run ProQ3 for a model of the same target, you can just enter
+the location where the target's profile was stored (.acc, .ss2, .mtx and .psi files). Usually, this is either
+a place that you entered for -fasta option in the previous run or -outpath. Building a target's profile
+(running psiblast) is the most time consuming step of running ProQ3/ProQ3D, so you shouldn't do that more than
+once for the same target.
 
-2.  The PDB model covers only part of the target sequence
-    PDB models often have "missing residues" - not all of the residues in the
-    target sequence are modelled. In that case it is better to extract
-    sequence-specific features from the full target sequence and then copy them
-    to the model.
+* -only-build-profile If you want only to build profile (run psi-blast) for the target sequence, you can
+run ProQ3 with this option. The next time you can run ProQ3/ProQ3D for models of the same target by
+using -profile option to use the profile that you already created.
 
-        $ ./bin/run_all_external.pl -fasta [target-sequence-fasta]
+* -outpath DIR        By default ProQ3/ProQ3D will output files in the same directory as the pdb model. However,
+if you want to use another directory for the output, you can use this option.
 
-        $ ./ProQ3/bin/copy_features_from_master.pl [pdb-model] [target-sequence-fasta]
-
-    After you run run_all_external.pl on [target-sequence-fasta] it will create 
-    [target-sequence-fasta].ss2, [target-sequence-fasta].acc, [target-sequence-fasta].psi and 
-    [target-sequence-fasta].mtx files. The script copy_features_from_master.pl will take relevant parts 
-    of these files and copy them to [pdb-model].ss2, [pdb-model].acc, [pdb-model].psi and 
-    [pdb-model].mtx files.
-
-3. If you have several PDB models of the same target protein (which is often the case), you should 
-    run run_all_external.pl only once (which is the time consuming part). After
-    that you can just use copy_features_from_master.pl to copy the
-    sequence-specific features to all of the PDB models. This will work
-    regardless whether your PDB models cover the whole or only part of the
-    target sequence!
-
-    So basically, this is what you want to do most of the time:
-
-        $ ./bin/run_all_external.pl -fasta [target-sequence-fasta]
-
-        $ ./ProQ3/bin/copy_features_from_master.pl [first-pdb-model] [target-sequence-fasta]
-
-        $ ./ProQ3/bin/copy_features_from_master.pl [second-pdb-model] [target-sequence-fasta]
-
-        $ ./ProQ3/bin/copy_features_from_master.pl [third-pdb-model] [target-sequence-fasta]
-etc.
-
-###Running PROQ3 with pre-built profile
-
-Now you are ready to run ProQ3. Type 
-
-    $ ./ProQ3 
-
-without parameters to see the usage.
-
-```
-Usage: ProQ3 [parameters]
-
--m/--model               [pdb-model]
-                             PDB model file to be evaluated
--r/--repack              [yes/no] default=yes
-                             Should we perform the side chain repacking step?  
--t/--target_length       [Number_of_residues] default='model_length'
-                             The global score is calculated as sum_of_local/target_length
--k/--keep_files          [yes/no] default=no 
-                             Should we keep the repacked models and svm input files?
--l/--local_output        [output_file_local] default=[pdb-model].proq3.local
-                             The output file for local predictions
--g/--global_output       [output_file_global] default=[pdb-model].proq3.global
-                             The output file for global predictions
--o/--rosetta_log         [rosetta_log_file] default=[pdb-model].rosetta.log
-                             The output file with Rosetta logs
-```
-
-The basic usage is:
-
-    $ ./ProQ3 [pdb-model]
-
-This will will perform the side-chain repacking step and run ProQ3 on the input model. 
-
-Other options explained in more detail:
-
-* -r/--repack           Controls whether the side chain rebuilding and energy minimization steps 
+* -repack             Controls whether the side chain rebuilding and energy minimization steps 
 should be performed before evaluating the model structure. This takes more time, but the results 
 are usually a little bit more accurate.
 
-* -t/--target_length    Sets the length of the target sequence by which global scores are normalized. 
-By default ProQ3 assumes that the model spans the whole target, i. e. the target length is the same 
-as the model length. The global score is calculated as sum_of_local/target_length. If you want to 
-get just the sum of local scores, use --target_length 1.
+* -deep               Controls whether we should use deep learning version of the predictor (ProQ3D) or SVM (ProQ3) 
 
-* -k/--keep_files       Use this option if you want to keep some of the intermediate files (i.e. 
+* -target_length  INT This is a number by which global scores will be normalized. By default, ProQ3/ProQ3D score is
+a sum of local scores divided by the target sequence length (or a model length if the target sequence is not provided).
+By using this option, you can change this behavior. For example, if you don't have the target sequence, but you know the
+target length, you can still enter the length here so that the global scores are correctly normalized. Alternatively, if
+you know the native structure and you are comparing ProQ3 score with GDT_TS or TMscore, you might want to enter the length
+of the native structure here (which sometimes is shorter than the target sequence), because GDT_TS and TMscore are normalized
+by the length of native structure. Finally, if you just want to get the sum of the local scores, you can enter --target_length 1.
+
+* -keep_files         Use this option if you want to keep some of the intermediate files (i.e. 
 repacked models and .svm input files), the names of the files are: 
 
     * [pdb-model].repacked              PDB model with rebuilt side chains
@@ -250,15 +233,10 @@ minimization step in Rosetta
     * [pdb-model].lowres.svm            SVM input file for ProQ_lowres
     * [pdb-model].highres.svm           SVM input file for ProQ_highres
     * [pdb-model].proq3.svm             SVM input file for ProQ3
+    * [pdb-model].rosetta.log           Rosetta log file
 
-* -l/--local_output     By default ProQ3 outputs local predictions to [pdb-model].proq3.local. Use 
-this option if you want to change the output file
+* -debug_mode         Keeps all temporary files. 
 
-* -g/--global_output    By default ProQ3 outputs global predictions to [pdb-model].proq3.global. Use 
-this option if you want to change the output file
+Good luck using ProQ3/ProQ3D!
 
-* -o/--rosetta_log      The log file where output from Rosetta will be written. Use /dev/null if you 
-don't want to keep the logs. The default is [pdb-model].rosetta.log
-
-Thanks for using ProQ3!
 

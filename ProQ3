@@ -11,10 +11,14 @@ source $PROQ3_DIR/paths.sh       # Read in paths
 
 function usage {
     echo "
+NOTE: It is easier and recommended to run ProQ3/ProQ3D using run_proq3.sh script. If you are running this script manually, make sure you know what you are doing.
+
 Usage: $SCRIPT_NAME [parameters]
 
 -m/--model               [pdb-model]
                              PDB model file to be evaluated
+-d/--deep                [yes/no] default=no
+                            Should we use Deep Learning (Theano) instead of SVM? Runs ProQ3D
 -r/--repack              [yes/no] default=yes
                              Should we perform the side chain repacking step?  
 -t/--target_length       [Number_of_residues] default='model_length'
@@ -27,13 +31,14 @@ Usage: $SCRIPT_NAME [parameters]
                              The output file for global predictions
 -o/--rosetta_log         [rosetta_log_file] default=[pdb-model].rosetta.log
                              The output file with Rosetta logs
--d/--debug_mode          [yes/no] default=no 
+--debug_mode             [yes/no] default=no 
                              Debug mode keeps all temporary files
 "
    exit 1 
 }
 
-if [[ $# < 2 ]] ; then
+if [[ $# -lt 2 ]] ; then
+    echo "ERROR: too few suplied arguments"
     usage
 fi
 
@@ -44,6 +49,10 @@ key="$1"
 case $key in
     -m|--model)
     MODEL="$2"
+    shift # past argument
+    ;;
+    -d|--deep)
+    DEEP="$2"
     shift # past argument
     ;;
     -r|--repack)
@@ -130,6 +139,19 @@ if [[ -f $LOCAL_OUT ]] ; then
     exit 1
 fi
 
+if [[ $DEEP == "no" ]] || [[ $DEEP == "No" ]] || [[ $DEEP == "NO" ]] || [[ $DEEP == "" ]] ; then
+    DEEP="no"
+elif [[ $DEEP == "yes" ]] || [[ $DEEP == "Yes" ]] ||  [[ $DEEP == "YES" ]] ; then
+    DEEP="yes"
+    if [[ "$DEEP_INSTALLED" == "no" ]] ; then
+        echo "ERROR: You are trying to run the deep learning version of predictor (ProQ3D), but you don't have python with keras and numpy packages installed"
+        exit 1
+    fi
+else
+    echo "ERROR: -d/--deep $DEEP value is not recognized (should be yes or no)"
+    usage
+fi
+
 if [[ $REPACK == "yes" ]] || [[ $REPACK == "Yes" ]] || [[ $REPACK == "YES" ]] || [[ $REPACK == "" ]] ; then
     R=".repacked"
     M=".minimized"
@@ -160,7 +182,7 @@ if [[ $DEBUG == "no" ]] || [[ $DEBUG == "No" ]] || [[ $DEBUG == "NO" ]] || [[ $D
 elif [[ $DEBUG == "yes" ]] || [[ $DEBUG == "Yes" ]] ||  [[ $DEBUG == "YES" ]] ; then
     DEBUG="yes"
 else
-    echo "ERROR: -d/--debug_mode $DEBUG value is not recognized (should be yes or no)"
+    echo "ERROR: --debug_mode $DEBUG value is not recognized (should be yes or no)"
     usage
 fi
 
@@ -250,7 +272,7 @@ if [[ ! -f $MODEL$R.proq3.svm ]] ; then
     $R_SCRIPT $PROQ3_DIR/ProQ3_scripts/extract-per-residue-centroid-features-global-normalized.R $MODEL$R$M.score.$$.temp4 $MODEL$R$M.features.lowres_global.$$.temp $feat_len
     $PROQ3_DIR/ProQ3_scripts/svm_to_txt $MODEL$R.features.proq2.$$.temp $MODEL$R.features.proq2.$$.temp2
     cut -f 3-176 -d " " $MODEL$R.features.proq2.$$.temp2 > $MODEL$R.features.proq2.$$.temp3
-    cut -f 1 -d " " $MODEL$R.features.proq2.$$.temp > $MODEL$R.features.target.$$.temp
+    cut -f 1 -d " " $MODEL$R.features.proq2.$$.temp3 > $MODEL$R.features.target.$$.temp
     cut -f 152-154,155-157,171-172 -d " " $MODEL$R.features.proq2.$$.temp3 > $MODEL$R.features.rsa_ss.$$.temp
     paste -d " " $MODEL$R.features.target.$$.temp $MODEL$R.features.proq2.$$.temp3 $MODEL$R$M.features.highres.$$.temp $MODEL$R$M.features.lowres.$$.temp $MODEL$R$M.features.lowres_global.$$.temp > $MODEL$R.proq3
     paste -d " " $MODEL$R.features.target.$$.temp $MODEL$R.features.proq2.$$.temp3 > $MODEL$R.proq2
@@ -258,7 +280,6 @@ if [[ ! -f $MODEL$R.proq3.svm ]] ; then
     paste -d " " $MODEL$R.features.target.$$.temp $MODEL$R.features.rsa_ss.$$.temp $MODEL$R$M.features.lowres.$$.temp $MODEL$R$M.features.lowres_global.$$.temp > $MODEL$R.lowres
     for txt_file in $MODEL$R.proq3 $MODEL$R.proq2 $MODEL$R.highres $MODEL$R.lowres ; do
         $PROQ3_DIR/ProQ3_scripts/txt_to_svm $txt_file $txt_file.svm
-        rm $txt_file
     done
     if [[ $DEBUG == "no" ]] ; then
         rm $MODEL$R$M.features.highres.$$.temp $MODEL$R$M.features.lowres.$$.temp $MODEL$R$M.features.lowres_global.$$.temp $MODEL$R.features.proq2.$$.temp $MODEL$R.features.proq2.$$.temp2 $MODEL$R.features.proq2.$$.temp3 $MODEL$R.features.target.$$.temp $MODEL$R$M.score.$$.temp $MODEL$R$M.score.$$.temp2 $MODEL$R$M.score.$$.temp3 $MODEL$R$M.score.$$.temp4 $MODEL$R.features.rsa_ss.$$.temp
@@ -267,19 +288,30 @@ fi
 
 if [[ ! -f $GLOBAL_OUT ]] ; then
     echo "------------------- Making predictions -------------------"
-    $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.proq2.svm $PROQ3_DIR/svm_models/ProQ2$R.model $MODEL$R.proq2.pred.$$.temp 
-    $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.lowres.svm $PROQ3_DIR/svm_models/lowres$R.model $MODEL$R.lowres.pred.$$.temp 
-    $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.highres.svm $PROQ3_DIR/svm_models/highres$R.model $MODEL$R.highres.pred.$$.temp 
-    $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.proq3.svm $PROQ3_DIR/svm_models/ProQ3$R.model $MODEL$R.proq3.pred.$$.temp 
-    echo "ProQ2 ProQ_Lowres ProQ_Highres ProQ3" > $LOCAL_OUT
-    echo "ProQ2 ProQ_Lowres ProQ_Highres ProQ3" > $GLOBAL_OUT
+    if [[ "$DEEP" == "no" ]] ; then
+        $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.proq2.svm $PROQ3_DIR/svm_models/ProQ2$R.model $MODEL$R.proq2.pred.$$.temp 
+        $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.lowres.svm $PROQ3_DIR/svm_models/lowres$R.model $MODEL$R.lowres.pred.$$.temp 
+        $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.highres.svm $PROQ3_DIR/svm_models/highres$R.model $MODEL$R.highres.pred.$$.temp 
+        $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.proq3.svm $PROQ3_DIR/svm_models/ProQ3$R.model $MODEL$R.proq3.pred.$$.temp 
+        echo "ProQ2 ProQRosCen ProQRosFA ProQ3" > $LOCAL_OUT
+        echo "ProQ2 ProQRosCen ProQRosFA ProQ3" > $GLOBAL_OUT
+    elif [[ "$DEEP" == "yes" ]] ; then
+        $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq2 $MODEL$R.proq2.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10${R}.proq2_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10${R}.proq2_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
+        $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.lowres $MODEL$R.lowres.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10${R}.lowres_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10${R}.lowres_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
+        $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.highres $MODEL$R.highres.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10${R}.highres_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10${R}.highres_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
+        $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq3 $MODEL$R.proq3.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10${R}.proq3_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10${R}.proq3_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
+        echo "ProQ2D ProQRosCenD ProQRosFAD ProQ3D" > $LOCAL_OUT
+        echo "ProQ2D ProQRosCenD ProQRosFAD ProQ3D" > $GLOBAL_OUT
+    else
+        echo "ERROR: invalid --deep parameter"
+    fi    
     paste -d " " $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp >> $LOCAL_OUT
     if [[ $TARGET_LENGTH == "" ]] ; then
         TARGET_LENGTH=`cat $MODEL$R.proq2.pred.$$.temp | wc -l`
     fi
     tail -n +2 $LOCAL_OUT | awk -v my_length="$TARGET_LENGTH" '{ sum1 += $1 ; sum2 += $2 ; sum3 += $3 ; sum4 += $4 } END { if (my_length > 0) print sum1 / my_length, sum2 / my_length, sum3 / my_length, sum4 / my_length }' >> $GLOBAL_OUT
     if [[ $DEBUG == "no" ]] ; then
-        rm $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp
+        rm $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp $MODEL$R.proq3 $MODEL$R.proq2 $MODEL$R.highres $MODEL$R.lowres
     fi
 fi
 
@@ -291,7 +323,7 @@ if [[ $KEEP == "no" ]] && [[ $DEBUG == "no" ]] ; then
     if [[ $R == ".repacked" ]] ; then
         rm $MODEL$R $MODEL$R$M $MODEL$R.ss2 $MODEL$R.acc $MODEL$R.psi $MODEL$R.mtx
     fi
-    rm $MODEL$R.proq3.svm $MODEL$R.proq2.svm $MODEL$R.highres.svm $MODEL$R.lowres.svm $MODEL.ss2 $MODEL.acc $MODEL.psi $MODEL.mtx
+    rm $MODEL$R.proq3.svm $MODEL$R.proq2.svm $MODEL$R.highres.svm $MODEL$R.lowres.svm $MODEL.ss2 $MODEL.acc $MODEL.psi $MODEL.mtx $MODEL.rosetta.log
 elif [[ "$hetatm" != "0" ]] ; then
     for i in ${MODEL}* ; do
         newname=`echo $i | sed -e 's/.no_hetatm.pdb//'` # move <model>.pdb.no_hetatm.pdb.repacked to <model>.pdb.repacked and so on
