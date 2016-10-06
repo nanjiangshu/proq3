@@ -42,11 +42,14 @@ If you would like to use the deep learning version of the predictor (ProQ3D), th
 
 2. Python numpy package
 
-3. Python keras package
+3. Python h5py package
+
+4. Python keras package (Theano or Tensorflow backend)
 
 Please, note that ProQ3D was trained using Cuda/GPU, but this is not a requirement to run ProQ3D. The prediction
-is much faster than training, so you can simply use CPU to make ProQ3D predictions as long as you have numpy and
-keras packages installed. If Cuda is not installed, python should use CPU by default.
+is much faster than training, so you can simply use CPU to make ProQ3D predictions. If Cuda is not installed, 
+python will use CPU by default. The prediction itself (excluding feature generation) takes under 1 second for a single
+model using either CPU or GPU.
 
 ## Installation
 
@@ -82,7 +85,9 @@ If you would like to use the deep learning version of the predictor (ProQ3D), th
 
 2. If you don't have "numpy" package, install it by typing `pip install numpy`
 
-3. If you don't have "keras" package, install it by typing `pip install keras`
+3. If you don't have "h5py" package, install it by typing `pip install h5py`
+
+4. If you don't have "keras" package, install it by typing `pip install keras`
 
 ##Test run
 
