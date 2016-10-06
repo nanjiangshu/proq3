@@ -146,16 +146,16 @@ Other options:
 
    * run ProQ3 for two models structures with a given the amino acid sequence of the target
 
-        $ run_proq3.sh -fasta tests_clean/1e12A.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out2
+        $ run_proq3.sh -fasta tests_clean/target.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out2
 
 
    * run ProQ3D for two model structures with pre-built profile
 
-        $ -profile tests_clean/profile/1e12A.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes
+        $ run_proq3.sh -profile tests_clean/target.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes
 
    * run ProQ3D for a list of models with pre-built profile and without repacking
 
-        $ -profile tests_clean/profile/1e12A.fasta -l tests_clean/model_list.txt tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes -repack no
+        $ run_proq3.sh -profile tests_clean/target.fasta -l tests_clean/model_list.txt -outpath test_out4 -deep yes -repack no
 
 NOTE: It is always recommended to provide full target sequence or pre-built target profile (-fasta or -profile) options.
 Some of the pdb models do not model all residues in the target. If the model is shorter than the target and you don't provide
