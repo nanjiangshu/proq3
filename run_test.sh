@@ -8,17 +8,11 @@ echo "------------- Testing build profile ------------------"
 
 mkdir test.$num
 cp tests_clean/*.pdb test.$num/
-cp tests_clean/target.fasta* test.$num/
-#bin/run_all_external.pl -pdb test.$num/1e12A_0001.pdb 
-#cp tests_clean/1e12A_0001.subset.pdb test.$num/
-#bin/copy_features_from_master.pl test.$num/1e12A_0001.subset.pdb test.$num/1e12A_0001.pdb
+cp tests_clean/target.fasta test.$num/
 
-#./run_proq3.sh -fasta test.$num/target.fasta -only-build-profile
+./run_proq3.sh -fasta test.$num/target.fasta -only-build-profile
 
 echo "------------- Testing ProQ3 ------------------"
-
-#./ProQ3 -m test.$num/1e12A_0001.pdb -r no --debug_mode yes
-#./ProQ3 -m test.$num/1e12A_0001.subset.pdb -r yes --debug_mode yes -t 62
 
 ./run_proq3.sh test.$num/1e12A_0001.pdb -profile test.$num/target.fasta -repack no --debug_mode yes
 ./run_proq3.sh test.$num/1e12A_0001.subset.pdb -profile test.$num/target.fasta -repack yes --debug_mode yes
@@ -36,8 +30,6 @@ fi
 if [[ $DEEP_INSTALLED == "yes" ]] ; then
     echo "------------- Testing ProQ3D (deep learning version) ------------------"
 
-    #./ProQ3 -m test.$num/1e12A_0001_deep.pdb -r no --debug_mode yes --deep yes
-    #./ProQ3 -m test.$num/1e12A_0001_deep.subset.pdb -r yes --debug_mode yes -t 62 --deep yes
     ./run_proq3.sh test.$num/1e12A_0001_deep.pdb -profile test.$num/target.fasta -repack no --debug_mode yes -deep yes
     ./run_proq3.sh test.$num/1e12A_0001_deep.subset.pdb -profile test.$num/target.fasta -repack yes --debug_mode yes -deep yes
 
