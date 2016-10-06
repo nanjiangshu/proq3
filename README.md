@@ -44,7 +44,7 @@ If you would like to use the deep learning version of the predictor (ProQ3D), th
 
 3. Python keras package
 
-Please, note that ProQ3D was trained using Cuda/GPU, but this is not a requirement to run ProQ3D. The prediction
+Please, note that ProQ3D was trained using GPU, but this is not a requirement to run ProQ3D. The prediction
 is much faster than training, so you can simply use CPU to make ProQ3D predictions as long as you have numpy and
 keras packages installed.
 
@@ -83,6 +83,8 @@ If you would like to use the deep learning version of the predictor (ProQ3D), th
 2. If you don't have "numpy" package, install it by typing `pip install numpy`
 
 3. If you don't have "keras" package, install it by typing `pip install keras`
+
+If you are using gcc5 or newer and have problem installing keras, check out this help page: https://github.com/Theano/Theano/issues/4425
 
 ##Test run
 
