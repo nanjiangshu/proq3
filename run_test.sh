@@ -4,13 +4,19 @@ source ./paths.sh       # Read in paths
 
 num=$$
 
+skip_profile=$1
+
 echo "------------- Testing build profile ------------------"
 
 mkdir test.$num
 cp tests_clean/*.pdb test.$num/
 cp tests_clean/target.fasta test.$num/
 
-./run_proq3.sh -fasta test.$num/target.fasta -only-build-profile
+if [[ "$skip_profile" == "-skip" || "$skip_profile" == "--skip" || "$skip_profile" == "skip" ]] ; then
+    cp tests_clean/target.fasta.* test.$num/
+else
+    ./run_proq3.sh -fasta test.$num/target.fasta -only-build-profile
+fi
 
 echo "------------- Testing ProQ3 ------------------"
 

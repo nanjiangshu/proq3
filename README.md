@@ -95,10 +95,19 @@ Go to ProQ3 installation directory and type
 
     $ ./run_test.sh
 
-to perform the test run. It should 
-complete without any errors. The tests are run with `--debug_mode` option, so they output a little 
+to perform the test run. It should complete without any errors.
+
+If you want to save time and skip the profile generation step that runs psiblast when testing, you can add "-skip" option:
+
+    $ ./run_test.sh -skip
+
+This will use the pre-generated profile in the test run. However, it is recommended you test the whole installation 
+including the profile generation step.
+
+The tests are run with `--debug_mode` option, so they output a little 
 bit more files than usual. The most interesting output is in `*.local` and `*.global` files as 
 explained below.
+
 
 ## Running ProQ3/ProQ3D
 The simplest way to run ProQ3 is using the script `run_proq3.sh`
