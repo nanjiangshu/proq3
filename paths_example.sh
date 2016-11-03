@@ -48,7 +48,7 @@ elif [[ "$PYTHON_BIN" == "" ]] ; then
 fi
 
 if [[ -f $PYTHON_BIN ]] ; then
-    $PYTHON_BIN -c "import keras" &>/dev/null
+    KERAS_BACKEND=theano $PYTHON_BIN -c "import keras" &>/dev/null
     if [[ "$?" == "1" ]] ; then
         echo "WARNING: python package 'keras' is not installed. Please install the package using 'pip install keras'. Otherwise you will not be able to use deep learning version of the predictor (ProQ3D)"
         DEEP_INSTALLED="no"
