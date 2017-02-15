@@ -67,7 +67,9 @@ Created 2016-01-28, updated 2016-10-05
 
 Authors: Karolis Uziela (karolis.uziela@gmail.com), David Menéndez Hurtado (david.menendez.hurtado@scilifelab.se), Nanjiang Shu (nanjiang.shu@scilifelab.se), Björn Wallner (bjornw@ifm.liu.se), Arne Elofsson (arne@bioinfo.se)
 
-Cite: Uziela K, Shu N, Wallner B, Elofsson A (2016) 'ProQ3: Improved model quality assessments using Rosetta energy terms.' SciRep 6, 33509
+Cite: 
+Uziela K, Shu N, Wallner B, Elofsson A (2016) 'ProQ3: Improved model quality assessments using Rosetta energy terms.' SciRep 6, 33509
+Uziela K, Menéndez Hurtado D, Shu N, Wallner B, Elofsson A (2017) 'ProQ3D: improved model quality assessments using deep learning' Bioinformatics, doi: 10.1093/bioinformatics/btw819, PMID: 28052925.
 
 "
 PrintHelp(){ #{{{
