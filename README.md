@@ -44,7 +44,7 @@ If you would like to use the deep learning version of the predictor (ProQ3D), th
 
 3. Python h5py package
 
-4. Python keras package (Theano backend)
+4. Python keras package (Theano backend). WARNING: At the moment ProQ3D is only compatible with keras v1, but not keras v2.
 
 Please, note that ProQ3D was trained using Cuda/GPU, but this is not a requirement to run ProQ3D. The prediction
 is much faster than training, so you can simply use CPU to make ProQ3D predictions. If Cuda is not installed, 

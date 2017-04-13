@@ -54,9 +54,12 @@ echo cp -f $1 $basename.psitmp.$$.fasta
 cp -f $1 $basename.psitmp.$$.fasta
 
 echo "Running PSI-BLAST with sequence" $1 "..."
-echo $ncbidir/blastpgp -a 8 -j 3 -h 0.001 -d $dbname -F F -i $basename.psitmp.$$.fasta -C $basename.psitmp.$$.chk -Q $basename.psitmp.$$.psi
+ncores=`cat /proc/$$/status | grep Cpus_allowed_list | awk '{print $2}' | sed "s/-/ /g" | awk '{if ($2>0){print 1+$2-$1}else{print 1}}'`
+
+echo $ncbidir/blastpgp -a $ncores -j 3 -h 0.001 -d $dbname -F F -i $basename.psitmp.$$.fasta -C $basename.psitmp.$$.chk -Q $basename.psitmp.$$.psi
 #cpu=`grep -c CPU /proc/cpuinfo`;
-$ncbidir/blastpgp -a 8 -j 3 -h 0.001 -d $dbname -F F -i $basename.psitmp.$$.fasta -C $basename.psitmp.$$.chk -o $basename.psitmp.$$.blastpgp -Q $basename.psitmp.$$.psi > /dev/null #& $rootname.blast
+
+$ncbidir/blastpgp -a $ncores -j 3 -h 0.001 -d $dbname -F F -i $basename.psitmp.$$.fasta -C $basename.psitmp.$$.chk -o $basename.psitmp.$$.blastpgp -Q $basename.psitmp.$$.psi > /dev/null #& $rootname.blast
 
 
 echo "Running Makemat..."
