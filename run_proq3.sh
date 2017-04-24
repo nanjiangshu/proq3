@@ -35,11 +35,12 @@ Input/Output options:
   -debug_mode  yes|no  Whether to keep all temporary files
 
 ProQ3 predictor options:
-  -deep  yes|no        Whether to use Deep Learning (Theano) instead of SVM. If 'yes' runs ProQ3D (default: no)
+  -deep  yes|no        Whether to use Deep Learning (Theano) instead of SVM. If 'yes' runs ProQ3D (default: yes)
   -repack  yes|no      Whether to perform the side chain repacking (default: yes)
   -target_length  INT  Set the target length by which the global scores will be normalized (default: length of the target sequence or model)
 
 Other options:
+  -ncores              How many CPU cores should be used when building psiblast profile (default: 1)
   -q                   Quiet mode
   -verbose             Run script in verbose mode
   -h, --help           Print this help message and exit
@@ -176,7 +177,7 @@ modelListFile=
 modelList=()
 targetseqfile=
 isRepack=yes
-isDeep=no
+isDeep=yes
 isDebug=no
 isKeepFiles=no
 targetLength=

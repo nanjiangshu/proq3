@@ -20,8 +20,8 @@ fi
 
 echo "------------- Testing ProQ3 ------------------"
 
-./run_proq3.sh test.$num/1e12A_0001.pdb -profile test.$num/target.fasta -repack no --debug_mode yes
-./run_proq3.sh test.$num/1e12A_0001.subset.pdb -profile test.$num/target.fasta -repack yes --debug_mode yes
+./run_proq3.sh test.$num/1e12A_0001.pdb -profile test.$num/target.fasta -repack no --debug_mode yes -deep no
+./run_proq3.sh test.$num/1e12A_0001.subset.pdb -profile test.$num/target.fasta -repack yes --debug_mode yes -deep no
 
 if [[ ! -f test.$num/1e12A_0001.pdb.proq3.local || ! -f test.$num/1e12A_0001.pdb.proq3.global || ! -f test.$num/1e12A_0001.subset.pdb.proq3.local || ! -f test.$num/1e12A_0001.subset.pdb.proq3.global ]] ; then
     echo "ERROR: ProQ3 failed to run. The output files don't exist"
