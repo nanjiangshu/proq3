@@ -17,6 +17,7 @@ echo $basename
 #exit
 # The name of the BLAST data bank
 dbname=$2 # /local/www/services/ProQ2/DB/uniref90.fasta
+ncores=$3
 
 # Where the NCBI programs have been installed
 ncbidir=$dirname/../apps/blast-2.2.26/bin/
@@ -54,7 +55,7 @@ echo cp -f $1 $basename.psitmp.$$.fasta
 cp -f $1 $basename.psitmp.$$.fasta
 
 echo "Running PSI-BLAST with sequence" $1 "..."
-ncores=`cat /proc/$$/status | grep Cpus_allowed_list | awk '{print $2}' | sed "s/-/ /g" | awk '{if ($2>0){print 1+$2-$1}else{print 1}}'`
+#ncores=`cat /proc/$$/status | grep Cpus_allowed_list | awk '{print $2}' | sed "s/-/ /g" | awk '{if ($2>0){print 1+$2-$1}else{print 1}}'`
 
 echo $ncbidir/blastpgp -a $ncores -j 3 -h 0.001 -d $dbname -F F -i $basename.psitmp.$$.fasta -C $basename.psitmp.$$.chk -Q $basename.psitmp.$$.psi
 #cpu=`grep -c CPU /proc/cpuinfo`;

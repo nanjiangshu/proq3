@@ -151,7 +151,7 @@ RunProQ3_without_profile(){
         cp -f $modelfile $outpath/
         modelfile=$outpath/$basename_modelfile
     fi
-    exec_cmd "$rundir/bin/run_all_external.pl -pdb $modelfile"
+    exec_cmd "$rundir/bin/run_all_external.pl -pdb $modelfile -ncores $ncores"
 
     if [ $isOnlyBuildProfile -eq 0 ]; then
         cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug"
@@ -183,6 +183,7 @@ targetLength=
 verbose=0
 pathprofile=
 isOnlyBuildProfile=0
+ncores=1
 
 isNonOptionArg=0
 while [ "$1" != "" ]; do
@@ -240,6 +241,7 @@ while [ "$1" != "" ]; do
                 fi
                 shift;;
             -t|-target_length|--target_length) targetlength=$2;shift;;
+            -ncores|--ncores) ncores=$2;shift;;
             -verbose|--verbose) verbose=1;;
             -only-build-profile|--only-build-profile) isOnlyBuildProfile=1;;
             -*) echo Error! Wrong argument: $1 >&2; exit;;
@@ -309,7 +311,7 @@ if [ "$targetseqfile" != "" -o "$pathprofile" != ""  ];then
         workingseqfile=$pathprofile
     fi
 
-    exec_cmd "$rundir/bin/run_all_external.pl -fasta $workingseqfile"
+    exec_cmd "$rundir/bin/run_all_external.pl -fasta $workingseqfile -ncores $ncores"
 
     if [ $isOnlyBuildProfile -eq 0 ] ;then
         for ((i=0;i<numModel;i++));do

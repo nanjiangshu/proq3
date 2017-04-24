@@ -27,13 +27,13 @@ eval {
 };
 
 if(scalar(@ARGV) % 2 != 0) {
-    print STDERR "Usage: run_all_external.pl -pdb [pdbfile] -fasta [fastafile] -membrane 1 (if membrane protein) -overwrite 1 (if overwrite)\n";
+    print STDERR "Usage: run_all_external.pl -pdb [pdbfile] -fasta [fastafile] -membrane 1 (if membrane protein) -overwrite 1 (if overwrite) -ncores [int] (default:1)\n";
     exit;
 }
 %param=@ARGV;
 if(not(defined($param{-pdb})) &&
    not(defined($param{-fasta}))) {
-    print STDERR "Usage: run_all_external.pl -pdb [pdbfile] -fasta [fastafile] -membrane 1 (if membrane protein) -overwrite 1 (if overwrite)\n";
+    print STDERR "Usage: run_all_external.pl -pdb [pdbfile] -fasta [fastafile] -membrane 1 (if membrane protein) -overwrite 1 (if overwrite) -ncores [int] (default:1)\n";
     exit;
 }
 my $membrane=0;
@@ -55,6 +55,12 @@ if(defined($param{-pdb}))
 if(defined($param{-db}))
 {
     $DB=$param{-db};
+}
+
+if(defined($param{-ncores})) {
+    $ncores=$param{-ncores};
+} else {
+    $ncores=1
 }
 #my $use_master=0;
 #if(defined($param{-subsetof}))
@@ -114,9 +120,9 @@ if(!-e $profile_file) {
 #	    
  #   } else {
 
-    print "$INSTALL_DIR/bin/create_profile.sh $fasta $DB\n";
+    print "$INSTALL_DIR/bin/create_profile.sh $fasta $DB $ncores\n";
 #    exit;
-    system("$INSTALL_DIR/bin/create_profile.sh $fasta $DB 8 3");
+    system("$INSTALL_DIR/bin/create_profile.sh $fasta $DB $ncores");
   #  }
 }
 
