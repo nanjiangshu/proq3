@@ -22,6 +22,11 @@ WORKDIR /home/app
 # add the source code to WORKDIR/home/app
 ADD . ./proq3
 
+
+RUN cd /home/app/proq3 &&\
+    ./configure.pl
+
+
 RUN mkdir /home/download
 RUN mkdir /home/app/proq3/database
 #================================
@@ -47,5 +52,12 @@ RUN pip install scipy==0.18.1
 RUN pip install keras==2.0.8
 RUN pip install Theano==0.8.2
 RUN pip install h5py==2.6.0
+
+
+#================================
+# Set keras configurations
+#===============================
+RUN mkdir -p /root/.keras
+RUN echo -e "{\n  \"backend\": \"theano\",\n  \"epsilon\": 1e-07,\n  \"floatx\": \"float32\" \n}" > /root/.keras/keras.json
 
 RUN export LC_ALL="en_US.UTF-8"
