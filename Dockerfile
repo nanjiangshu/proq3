@@ -1,6 +1,7 @@
-FROM ubuntu:16.04
+FROM nanjiang/common
 LABEL maintainer "Nanjiang Shu (nanjiang.shu@nbis.se)"
 LABEL version "1.0"
+
 
 #================================
 # Install basics
@@ -15,20 +16,6 @@ RUN apt-get install -y r-base
 RUN apt-get install -y cmake 
 RUN apt-get install -y qt4-qmake
 
-#================================
-#  Add proq3 source code
-#===============================
-WORKDIR /home/app
-# add the source code to WORKDIR/home/app
-ADD . ./proq3
-
-
-RUN cd /home/app/proq3 &&\
-    ./configure.pl
-
-
-RUN mkdir /home/download
-RUN mkdir /home/app/proq3/database
 #================================
 # Install EMBOSS
 #===============================
@@ -53,11 +40,33 @@ RUN pip install keras==2.0.8
 RUN pip install Theano==0.8.2
 RUN pip install h5py==2.6.0
 
+#================================
+#  Add proq3 source code
+#===============================
+WORKDIR /home/app
+# add the source code to WORKDIR/home/app
+ADD . ./proq3
+
+RUN cd /home/app/proq3 &&\
+    ./configure.pl
+
+
+RUN mkdir /home/download
+RUN mkdir /home/app/proq3/database
 
 #================================
-# Set keras configurations
+# Setting keras configuration
 #===============================
-RUN mkdir -p /root/.keras
-RUN echo -e "{\n  \"backend\": \"theano\",\n  \"epsilon\": 1e-07,\n  \"floatx\": \"float32\" \n}" > /root/.keras/keras.json
+RUN mkdir -p /home/user/.keras
+RUN echo  "{\n  \"backend\": \"theano\",\n  \"epsilon\": 1e-07,\n  \"floatx\": \"float32\" \n}" > /home/user/.keras/keras.json
+
+#================================
+# Setting library path for rosetta
+#===============================
+ENV LD_LIBRARY_PATH "/home/app/proq3/apps/rosetta/main/source/build/src/release/linux/3.13/64/x86/gcc/4.8/default/:/home/app/proq3/apps/rosetta/main/source/build/external/release/linux/3.13/64/x86/gcc/4.8/default/"
+
+ENV USER_DIRS "/home/app"
 
 RUN export LC_ALL="en_US.UTF-8"
+
+CMD ["/bin/bash" ]
