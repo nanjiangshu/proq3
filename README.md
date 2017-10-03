@@ -21,17 +21,13 @@ installation of Docker.
 
 1. Get Docker image 
 
-```
-docker pull nanjiang/proq3
-```
+    `docker pull nanjiang/proq3`
 
 2. Prepare BLAST database. If you do not have `uniref90.fasta` BLAST database
    available, please use the script [install_blastdb.sh](./install_blastdb.sh) provided in this git repo 
    Suppose you want to install the BLAST database at `/data/blastdb`, run
 
-```
-./install_blastdb.sh /data/blastdb
-```
+    `./install_blastdb.sh /data/blastdb`
 
 3. Prepare the Rosetta package. If you do not have a local copy of the Rosetta
    package, please use the script [install_rosetta.sh](./install_rosetta.sh)
@@ -40,9 +36,7 @@ docker pull nanjiang/proq3
    will be given a `PASSWORD` by email. Suppose you want to install the Rosetta package
    at `/data/rosetta`, run
 
-```
-./install_rosetta.sh /data/rosetta PASSWORD
-```
+    `./install_rosetta.sh /data/rosetta PASSWORD`
 
 4. Start the docker container (in background, remote the option `-it` if you
    want to run in foreground) assuming you have the BLAST database installed at
@@ -50,30 +44,22 @@ docker pull nanjiang/proq3
    container starts with your local user `$USER` in the following command, but
    can be started with any user to your preference. We also mount the dir
    `/scratch` on localhost to the `/scratch` within the container.
- 
-```
-docker run  -e USER_ID=$(id -u $USER) -v /data/blastdb:/home/app/proq3/database/blastdb -v /data/rosetta/rosetta_2014.16.56682_bundle:/home/app/proq3/apps/rosetta -v /scratch:/scratch  -it --name proq3 -d  nanjiang/proq3
-```
+
+    `docker run  -e USER_ID=$(id -u $USER) -v /data/blastdb:/home/app/proq3/database/blastdb -v /data/rosetta/rosetta_2014.16.56682_bundle:/home/app/proq3/apps/rosetta -v /scratch:/scratch  -it --name proq3 -d  nanjiang/proq3`
 
 5. Now you can test run the ProQ3 command 
 
 * Run ProQ3 for the model `1e12A_0001.pdb` with prebuilt profile and output the result to `/scratch/outproq3-1`
 
-```
-    docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh --profile /home/app/proq3/tests_clean/target.fasta /home/app/proq3/tests_clean/1e12A_0001.pdb -outpath /scratch/outproq3-1"
-```
+    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh --profile /home/app/proq3/tests_clean/target.fasta /home/app/proq3/tests_clean/1e12A_0001.pdb -outpath /scratch/outproq3-1"`
 
 * Run ProQ3 for the model `1e12A_0001.pdb` with from scratch (blastpgp will be run) and output the result to `/scratch/outproq3-2`
 
-```
-    docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /home/app/proq3/tests_clean/1e12A_0001.pdb -outpath /scratch/outproq3-2"
-```
+    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /home/app/proq3/tests_clean/1e12A_0001.pdb -outpath /scratch/outproq3-2"`
 
 * Run ProQ3 with your own model structure, e.g. at `/scratch/yourmodel.pdb` and output the result to `/scratch/out-yourmodel`
 
-```
-    docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /scratch/yourmodel.pdb -outpath /scratch/out-yourmodel"
-```
+    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /scratch/yourmodel.pdb -outpath /scratch/out-yourmodel"`
 
 
 ### More details of the ProQ3/ProQ3D package are described below
