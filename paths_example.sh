@@ -1,14 +1,16 @@
 #!/bin/bash
 
 ############# Please set the paths here #############
+SCRIPT_PATH=`realpath ${BASH_SOURCE[0]}`
+rundir=`dirname $SCRIPT_PATH`
 
-rosetta_path=/scratch3/uziela/software/rosetta_2014wk05_bundle          # Path to Rosetta installation
-ROSETTA_BIN=${rosetta_path}/main/source/bin                             # The directory should contain Rosetta executables, such as relax.linuxgccrelease, score.linuxgccrelease
-ROSETTA_DB=${rosetta_path}/main/database                                # The directory should contain Rosetta database.
-export BLAST_DATABASE=/scratch3/uziela/data_sets/uniref/uniref90.fasta  # Path to formatted blast database (such as uniref90)
+rosetta_path=$rundir/apps/rosetta/                                 # Path to Rosetta installation
+ROSETTA_BIN=${rosetta_path}/main/source/bin                        # The directory should contain Rosetta executables, such as relax.linuxgccrelease, score.linuxgccrelease
+ROSETTA_DB=${rosetta_path}/main/database                           # The directory should contain Rosetta database.
+export BLAST_DATABASE=$rundir/database/blastdb/uniref90.fasta      # Path to formatted blast database (such as uniref90)
 
-R_SCRIPT=""                                                             # The variable should point to "Rscript" executable (you can leave it empty if R and Rscript is already in your path)
-PYTHON_BIN=""                                                           # The variable should point to python executable (you can leave it empty if python is already in your path)
+R_SCRIPT=""                                                        # The variable should point to "Rscript" executable (you can leave it empty if R and Rscript is already in your path)
+PYTHON_BIN=""                                                      # The variable should point to python executable (you can leave it empty if python is already in your path)
 
 ############# Here we check if the paths are set correctly. Don't modify this part. #############
 
