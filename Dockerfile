@@ -48,6 +48,7 @@ WORKDIR /home/app
 ADD . ./proq3
 
 RUN cd /home/app/proq3 &&\
+    cp paths_example.sh paths.sh &&\
     ./configure.pl
 
 
