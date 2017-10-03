@@ -13,6 +13,18 @@ Arne Elofsson (arne@bioinfo.se)
 
 Last updated: 2016-10-05
 
+## Installation and usage
+To simplify installing ProQ3/ProQ3D locally, we have made a Docker image and
+two assisting scripts `install_blastdb.sh` and `install_rosetta.sh`.
+Please also refer to https://docs.docker.com/engine/installation/ for the
+installation of Docker.
+
+### Get Image 
+
+
+
+### More details of the ProQ3/ProQ3D package are described below
+
 ## Requirements
 
 1. Any of recent Rosetta weekly releases (week 36, 2013 or newer)
