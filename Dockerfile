@@ -1,4 +1,4 @@
-FROM nanjiang/common
+FROM nanjiang/common-ubuntu
 LABEL maintainer "Nanjiang Shu (nanjiang.shu@nbis.se)"
 LABEL version "1.0"
 
