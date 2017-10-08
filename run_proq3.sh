@@ -47,7 +47,7 @@ Other options:
   -h, --help           Print this help message and exit
     
 Examples:
-   # run ProQ3 (SVM version) for a given model structure and the full target sequence in fasta format (see note below)
+   # run ProQ3 (SVM version) for a given model structure and the full target protein sequence in fasta format (see note below)
    $progname tests_clean/1e12A_0001.pdb -fasta tests_clean/target.fasta -outpath test_out1 -deep no
 
    # run ProQ3 (SVM version) for two model structures with a given the amino acid sequence of the target
@@ -62,12 +62,10 @@ Examples:
    # run ProQ3D for a list of models with pre-built profile and without repacking
    $progname -profile tests_clean/target.fasta -l tests_clean/model_list.txt -outpath test_out4 -deep yes -repack no
 
-NOTE: It is always recommended to provide full target sequence or pre-built target profile (-fasta or -profile) options.
-Some of the pdb models do not have all residues in the target. If the model is shorter than the target and you don't provide
-the full target sequence, the global scores will be incorrectly normalized and this might also affect psiblast results.
-However, if you are sure that the model has full amino acid sequence, or if the full sequence is not available,
-you can run ProQ3 just by providing the pdb model as in the first example. In this case we will extract fasta sequence from the model.
-   
+NOTE: If you don't provide target protein sequence in fasta format, the sequence will be extracted from the model. However, please,
+always provide the target protien fasta sequence, unless you are sure that the model has full amino acid sequence, as in target protein. 
+Otherwise, ProQ3 results will not be accurate.
+  
 Created 2016-01-28, updated 2017-10-08
 
 Authors: Karolis Uziela (karolis.uziela@gmail.com), David Menéndez Hurtado (david.menendez.hurtado@scilifelab.se), Nanjiang Shu (nanjiang.shu@scilifelab.se), Björn Wallner (bjornw@ifm.liu.se), Arne Elofsson (arne@bioinfo.se)

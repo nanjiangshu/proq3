@@ -230,11 +230,9 @@ Other options:
 
         $ run_proq3.sh -profile tests_clean/target.fasta -l tests_clean/model_list.txt -outpath test_out4 -deep yes -repack no
 
-NOTE: It is always recommended to provide full target sequence or pre-built target profile (-fasta or -profile) options.
-Some of the pdb models do not model all residues in the target. If the model is shorter than the target and you don't provide
-the full target sequence, the global scores will be incorrectly normalized and this might also affect psiblast results.
-However, if you are sure that the model has full amino acid sequence, or if the full sequence is not available, 
-you can run ProQ3 just by providing the pdb model as in the first example. In this case we will extract fasta sequence from the model.
+NOTE: If you don't provide target protein sequence in fasta format, the sequence will be extracted from the model. However, please,
+always provide the target protein fasta sequence, unless you are sure that the model has full amino acid sequence, as in target protein.
+Otherwise, ProQ3 results will not be accurate.
 
 ###Output files
 
