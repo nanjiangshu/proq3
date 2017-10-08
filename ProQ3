@@ -17,8 +17,10 @@ Usage: $SCRIPT_NAME [parameters]
 
 -m/--model               [pdb-model]
                              PDB model file to be evaluated
--d/--deep                [yes/no] default=no
+-d/--deep                [yes/no] default=yes
                             Should we use Deep Learning (Theano) instead of SVM? Runs ProQ3D
+-q/--quality               [sscore/tmscore/lddt/cad] default=sscore
+                            Should we run ProQ3D-S, ProQ3D-TM, ProQ3-lDDT or ProQ3D-CAD?
 -r/--repack              [yes/no] default=yes
                              Should we perform the side chain repacking step?  
 -t/--target_length       [Number_of_residues] default='model_length'
@@ -53,6 +55,10 @@ case $key in
     ;;
     -d|--deep)
     DEEP="$2"
+    shift # past argument
+    ;;
+    -q|--quality)
+    QUALITY="$2"
     shift # past argument
     ;;
     -r|--repack)
@@ -139,9 +145,9 @@ if [[ -f $LOCAL_OUT ]] ; then
     exit 1
 fi
 
-if [[ $DEEP == "no" ]] || [[ $DEEP == "No" ]] || [[ $DEEP == "NO" ]] || [[ $DEEP == "" ]] ; then
+if [[ $DEEP == "no" ]] || [[ $DEEP == "No" ]] || [[ $DEEP == "NO" ]] ; then
     DEEP="no"
-elif [[ $DEEP == "yes" ]] || [[ $DEEP == "Yes" ]] ||  [[ $DEEP == "YES" ]] ; then
+elif [[ $DEEP == "yes" ]] || [[ $DEEP == "Yes" ]] ||  [[ $DEEP == "YES" ]] || [[ $DEEP == "" ]] ; then
     DEEP="yes"
     if [[ "$DEEP_INSTALLED" == "no" ]] ; then
         echo "ERROR: You are trying to run the deep learning version of predictor (ProQ3D), but you don't have python with keras and numpy packages installed"
@@ -162,6 +168,22 @@ else
     echo "ERROR: -r/--reppack $REPACK value is not recognized"
     usage
 fi
+
+if [[ $QUALITY == "" ]] || [[ $QUALITY == "sscore" ]] ; then
+    QUALITY="sscore"
+elif [[ $QUALITY == "lddt" ]] || [[ $QUALITY == "cad" ]] || [[ $QUALITY == "tmscore" ]] ; then
+    if [[ $DEEP == "no" ]] ; then 
+        echo "ERROR: Currently --quality $QUALITY is only supported when running the deep version of the predictor, ProQ3D (--deep yes)"
+        exit 1
+    elif [[ $R == "" ]] ; then
+        echo "ERROR: Currently --quality $QUALITY is only supported when running ProQ3D with repacked models (-r/--repack yes)"
+        exit 1
+    fi
+else 
+    echo "ERROR: wrong --quality $QUALITY parameter. Supported --quality parameters: sscore, tmscore, lddt, cad"
+    exit 1
+fi
+
 
 if [[ $ROSETTA_LOG == "" ]] ; then
     MODEL_PATH=`readlink -f $MODEL`
@@ -264,7 +286,7 @@ if [[ ! -f $MODEL$R$M.score.$$.temp ]] ; then
 fi
 
 if [[ ! -f $MODEL$R.proq3.svm ]] ; then
-    echo "------------------- Generating SVM input -------------------"
+    echo "------------------- Generating input for regressor -------------------"
     $R_SCRIPT $PROQ3_DIR/ProQ3_scripts/extract-per-residue-features.R $MODEL$R$M.score.$$.temp $MODEL$R$M.features.highres.$$.temp
     $R_SCRIPT $PROQ3_DIR/ProQ3_scripts/extract-per-residue-centroid-features.R $MODEL$R$M.score.$$.temp2 $MODEL$R$M.features.lowres.$$.temp
     feat_len=`cat $MODEL$R$M.features.highres.$$.temp | wc -l`
@@ -295,35 +317,58 @@ if [[ ! -f $GLOBAL_OUT ]] ; then
         $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.proq3.svm $PROQ3_DIR/svm_models/ProQ3$R.model $MODEL$R.proq3.pred.$$.temp 
         echo "ProQ2 ProQRosCen ProQRosFA ProQ3" > $LOCAL_OUT
         echo "ProQ2 ProQRosCen ProQRosFA ProQ3" > $GLOBAL_OUT
-    elif [[ "$DEEP" == "yes" ]] ; then
+    elif [[ "$DEEP" == "yes" ]] && [[ "$QUALITY" == "sscore" ]] ; then
         KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq2 $MODEL$R.proq2.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10${R}.proq2_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10${R}.proq2_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
         KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.lowres $MODEL$R.lowres.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10${R}.lowres_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10${R}.lowres_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
         KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.highres $MODEL$R.highres.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10${R}.highres_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10${R}.highres_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
         KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq3 $MODEL$R.proq3.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10${R}.proq3_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10${R}.proq3_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
         echo "ProQ2D ProQRosCenD ProQRosFAD ProQ3D" > $LOCAL_OUT
         echo "ProQ2D ProQRosCenD ProQRosFAD ProQ3D" > $GLOBAL_OUT
+    elif [[ "$DEEP" == "yes" ]] && [[ "$QUALITY" == "tmscore" ]] ; then # ProQ3D-lDDT ProQ3D-CAD and ProQ3D-TM don't have ProQRosCenD ProQRosFAD columns, so they only have 2 columns (ProQ2D and ProQ3D)
+        KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq2 $MODEL$R.proq2.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10.proq2_alltarget6_shuffled_tm_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10.proq2_alltarget6_shuffled_tm_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
+        KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq3 $MODEL$R.proq3.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_tm_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_tm_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
+        echo "ProQ2D-TM ProQ3D-TM" > $LOCAL_OUT
+        echo "ProQ2D-TM ProQ3D-TM" > $GLOBAL_OUT
+    elif [[ "$DEEP" == "yes" ]] && [[ "$QUALITY" == "cad" ]] ; then # ProQ3D-lDDT ProQ3D-CAD and ProQ3D-TM don't have ProQRosCenD ProQRosFAD columns, so they only have 2 columns (ProQ2D and ProQ3D)
+        KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq2 $MODEL$R.proq2.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10.proq2_alltarget6_shuffled_cad1_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10.proq2_alltarget6_shuffled_cad1_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
+        KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq3 $MODEL$R.proq3.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_alltarget6_shuffled_cad1_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_alltarget6_shuffled_cad1_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
+        echo "ProQ2D-CAD ProQ3D-CAD" > $LOCAL_OUT
+        echo "ProQ2D-CAD ProQ3D-CAD" > $GLOBAL_OUT
+    elif [[ "$DEEP" == "yes" ]] && [[ "$QUALITY" == "lddt" ]] ; then # ProQ3D-lDDT ProQ3D-CAD and ProQ3D-TM don't have ProQRosCenD ProQRosFAD columns, so they only have 2 columns (ProQ2D and ProQ3D)
+        KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq2 $MODEL$R.proq2.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10.proq2_alltarget6_shuffled_lddt_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10.proq2_alltarget6_shuffled_lddt_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
+        KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq2 $MODEL$R.proq2.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_lddt_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_lddt_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
+        echo "ProQ2D-lDDT ProQ3D-lDDT" > $LOCAL_OUT
+        echo "ProQ2D-lDDT ProQ3D-lDDT" > $GLOBAL_OUT
     else
-        echo "ERROR: invalid --deep parameter"
+        echo "ERROR: invalid --deep or --quality parameter"
     fi    
-    paste -d " " $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp >> $LOCAL_OUT
+    
     if [[ $TARGET_LENGTH == "" ]] ; then
         TARGET_LENGTH=`cat $MODEL$R.proq2.pred.$$.temp | wc -l`
     fi
-    tail -n +2 $LOCAL_OUT | awk -v my_length="$TARGET_LENGTH" '{ sum1 += $1 ; sum2 += $2 ; sum3 += $3 ; sum4 += $4 } END { if (my_length > 0) print sum1 / my_length, sum2 / my_length, sum3 / my_length, sum4 / my_length }' >> $GLOBAL_OUT
+
+    if [[ "$QUALITY" == "sscore" ]] ; then
+        paste -d " " $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp >> $LOCAL_OUT
+        tail -n +2 $LOCAL_OUT | awk -v my_length="$TARGET_LENGTH" '{ sum1 += $1 ; sum2 += $2 ; sum3 += $3 ; sum4 += $4 } END { if (my_length > 0) print sum1 / my_length, sum2 / my_length, sum3 / my_length, sum4 / my_length }' >> $GLOBAL_OUT
+    else # ProQ3D-lDDT ProQ3D-CAD and ProQ3D-TM don't have ProQRosCenD ProQRosFAD columns, so they only have 2 columns (ProQ2D and ProQ3D)
+        paste -d " " $MODEL$R.proq2.pred.$$.temp $MODEL$R.proq3.pred.$$.temp >> $LOCAL_OUT
+        tail -n +2 $LOCAL_OUT | awk -v my_length="$TARGET_LENGTH" '{ sum1 += $1 ; sum2 += $2 } END { if (my_length > 0) print sum1 / my_length, sum2 / my_length }' >> $GLOBAL_OUT
+    fi
+
     if [[ $DEBUG == "no" ]] ; then
-        rm $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp $MODEL$R.proq3 $MODEL$R.proq2 $MODEL$R.highres $MODEL$R.lowres
+        rm -f $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp $MODEL$R.proq3 $MODEL$R.proq2 $MODEL$R.highres $MODEL$R.lowres
     fi
 fi
 
 if [[ "$hetatm" != "0" ]] ; then
-    rm ${MODEL} # remove <model>.pdb.no_hetatm.pdb
+    rm -f ${MODEL} # remove <model>.pdb.no_hetatm.pdb
 fi
 
 if [[ $KEEP == "no" ]] && [[ $DEBUG == "no" ]] ; then
     if [[ $R == ".repacked" ]] ; then
-        rm $MODEL$R $MODEL$R$M $MODEL$R.ss2 $MODEL$R.acc $MODEL$R.psi $MODEL$R.mtx
+        rm -f $MODEL$R $MODEL$R$M $MODEL$R.ss2 $MODEL$R.acc $MODEL$R.psi $MODEL$R.mtx
     fi
-    rm $MODEL$R.proq3.svm $MODEL$R.proq2.svm $MODEL$R.highres.svm $MODEL$R.lowres.svm $MODEL.ss2 $MODEL.acc $MODEL.psi $MODEL.mtx $MODEL.rosetta.log
+    rm -f $MODEL$R.proq3.svm $MODEL$R.proq2.svm $MODEL$R.highres.svm $MODEL$R.lowres.svm $MODEL.ss2 $MODEL.acc $MODEL.psi $MODEL.mtx $MODEL.rosetta.log
 elif [[ "$hetatm" != "0" ]] ; then
     for i in ${MODEL}* ; do
         newname=`echo $i | sed -e 's/.no_hetatm.pdb//'` # move <model>.pdb.no_hetatm.pdb.repacked to <model>.pdb.repacked and so on

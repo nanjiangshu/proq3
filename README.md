@@ -11,7 +11,7 @@ Björn Wallner (bjornw@ifm.liu.se)
 
 Arne Elofsson (arne@bioinfo.se)
 
-Last updated: 2016-10-05
+Last updated: 2017-10-08
 
 ## Installation and usage with Docker
 To simplify installing ProQ3/ProQ3D locally, we have made a Docker image and
@@ -51,15 +51,15 @@ installation of Docker.
 
 * Run ProQ3 for the model `1e12A_0001.pdb` with prebuilt profile and output the result to `/scratch/outproq3-1`
 
-    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh --profile /home/app/proq3/tests_clean/target.fasta /home/app/proq3/tests_clean/1e12A_0001.pdb -outpath /scratch/outproq3-1"`
+    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /home/app/proq3/tests_clean/1e12A_0001.pdb -profile /home/app/proq3/tests_clean/target.fasta -outpath /scratch/outproq3-1"`
 
 * Run ProQ3 for the model `1e12A_0001.pdb` with from scratch (blastpgp will be run) and output the result to `/scratch/outproq3-2`
 
-    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /home/app/proq3/tests_clean/1e12A_0001.pdb -outpath /scratch/outproq3-2"`
+    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /home/app/proq3/tests_clean/1e12A_0001.pdb -fasta /home/app/proq3/tests_clean/target.fasta -outpath /scratch/outproq3-2"`
 
-* Run ProQ3 with your own model structure, e.g. at `/scratch/yourmodel.pdb` and output the result to `/scratch/out-yourmodel`
+* Run ProQ3 with your own model structure and fasta sequence, e.g. at `/scratch/yourmodel.pdb; /scratch/yourmodel.fasta` and output the result to `/scratch/out-yourmodel`
 
-    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /scratch/yourmodel.pdb -outpath /scratch/out-yourmodel"`
+    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /scratch/yourmodel.pdb -fasta /scratch/yourmodel.fasta -outpath /scratch/out-yourmodel"`
 
 
 ### More details of the ProQ3/ProQ3D package are described below
@@ -173,7 +173,7 @@ Usage:  run_proq3.sh PDB-model [PDB-model ...] [-l PDB-model-LISTFILE ...]
                      [-outpath DIR]
                      [-keep_files] [-debug_mode]
                      [-deep] [-repack] [-target_length]
-                     [-q] [-verbose] [-h]
+                     [-verbose] [-h]
 
 Description:
     Run ProQ3 given one or several PDB-models 
@@ -193,29 +193,38 @@ Input/Output options:
 ProQ3 predictor options:
   -deep  yes|no        Whether to use Deep Learning (Theano) instead of SVM. If 'yes' runs ProQ3D (default: yes)
   -repack  yes|no      Whether to perform the side chain repacking (default: yes)
+  -quality  STR        Which quality measure should be used as the target value in training? Possible options: sscore, tmscore, cad, lddt. Default: sscorea
+                       Note that quality measures other than sscore are only available when running with -deep yes and -repack yes options.
   -target_length  INT  Set the target length by which the global scores will be normalized (default: length of the target sequence or model)
 
 Other options:
   -ncores              How many CPU cores should be used when building psiblast profile (default: 1)
-  -q                   Quiet mode
   -verbose             Run script in verbose mode
   -h, --help           Print this help message and exit
 ```
 
 ###Example commands for using the script `run_proq3.sh`
-   * run ProQ3 for a given model structure (see NOTE below)
+   * run ProQ3 (SVM version) for a given model structure and the full target sequence in fasta format (see note below)
 
-        $ run_proq3.sh tests_clean/1e12A_0001.pdb -outpath test_out1
+        $ run_proq3.sh tests_clean/1e12A_0001.pdb -fasta tests_clean/target.fasta -outpath test_out1 -deep no
 
 
-   * run ProQ3 for two models structures with a given the amino acid sequence of the target
+   * run ProQ3 (SVM version) for two models structures with a given the amino acid sequence of the target
 
-        $ run_proq3.sh -fasta tests_clean/target.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out2
+        $ run_proq3.sh -fasta tests_clean/target.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out2 -deep no
 
 
    * run ProQ3D for two model structures with pre-built profile
 
         $ run_proq3.sh -profile tests_clean/target.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes
+
+   * run ProQ3D for two model structures with pre-built profile and using CAD as the quality measure (target function)
+
+        $ run_proq3.sh -profile tests_clean/target.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes -quality cad
+   
+   * run ProQ3D for two model structures with pre-built profile and using CAD as the quality measure (target function)
+
+        $ run_proq3.sh -profile tests_clean/target.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes -quality cad
 
    * run ProQ3D for a list of models with pre-built profile and without repacking
 
@@ -225,7 +234,7 @@ NOTE: It is always recommended to provide full target sequence or pre-built targ
 Some of the pdb models do not model all residues in the target. If the model is shorter than the target and you don't provide
 the full target sequence, the global scores will be incorrectly normalized and this might also affect psiblast results.
 However, if you are sure that the model has full amino acid sequence, or if the full sequence is not available, 
-you can run ProQ3 just by providing the pdb model as in the first example.
+you can run ProQ3 just by providing the pdb model as in the first example. In this case we will extract fasta sequence from the model.
 
 ###Output files
 
@@ -284,6 +293,11 @@ should be performed before evaluating the model structure. This takes more time,
 are usually a little bit more accurate.
 
 * -deep               Controls whether we should use deep learning version of the predictor (ProQ3D) or SVM (ProQ3) 
+
+* -quality  STR       By default ProQ3D is run with sscore as the quality measure (target function for regressor). 
+However, you can also choose tmscore, cad or lddt as the quality measure. Note that -deep yes and -repack yes options
+have to be selected for using other quality measures. Only ProQ2D and ProQ3D output values are provided for quality
+measures other than sscore.
 
 * -target_length  INT This is a number by which global scores will be normalized. By default, ProQ3/ProQ3D score is
 a sum of local scores divided by the target sequence length (or a model length if the target sequence is not provided).

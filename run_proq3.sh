@@ -17,7 +17,7 @@ Usage:  $progname PDB-model [PDB-model ...] [-l PDB-model-LISTFILE ...]
         $wspace [-outpath DIR]
         $wspace [-keep_files] [-debug_mode]
         $wspace [-deep] [-repack] [-target_length]
-        $wspace [-q] [-verbose] [-h]
+        $wspace [-verbose] [-h]
 
 Description:
     Run ProQ3 given one or several PDB-models 
@@ -37,34 +37,38 @@ Input/Output options:
 ProQ3 predictor options:
   -deep  yes|no        Whether to use Deep Learning (Theano) instead of SVM. If 'yes' runs ProQ3D (default: yes)
   -repack  yes|no      Whether to perform the side chain repacking (default: yes)
+  -quality  STR        Which quality measure should be used as the target value in training? Possible options: sscore, tmscore, cad, lddt. Default: sscorea
+                       Note that quality measures other than sscore are only available when running with -deep yes and -repack yes options.
   -target_length  INT  Set the target length by which the global scores will be normalized (default: length of the target sequence or model)
 
 Other options:
   -ncores              How many CPU cores should be used when building psiblast profile (default: 1)
-  -q                   Quiet mode
   -verbose             Run script in verbose mode
   -h, --help           Print this help message and exit
     
 Examples:
-   # run ProQ3 for a given model structure (see NOTE below)
-   $progname tests_clean/1e12A_0001.pdb -outpath test_out1
+   # run ProQ3 (SVM version) for a given model structure and the full target sequence in fasta format (see note below)
+   $progname tests_clean/1e12A_0001.pdb -fasta tests_clean/target.fasta -outpath test_out1 -deep no
 
-   # run ProQ3 for two model structures with a given the amino acid sequence of the target
-   $progname -fasta tests_clean/target.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out2
+   # run ProQ3 (SVM version) for two model structures with a given the amino acid sequence of the target
+   $progname -fasta tests_clean/target.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out2 -deep no
 
    # run ProQ3D for two model structures with pre-built profile
    $progname -profile tests_clean/target.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes
 
+   # run ProQ3D for two model structures with pre-built profile and using CAD as the quality measure (target function)
+   $progname -profile tests_clean/target.fasta tests_clean/1e12A_0001.pdb tests_clean/1e12A_0001.subset.pdb -outpath test_out3 -deep yes -quality cad
+   
    # run ProQ3D for a list of models with pre-built profile and without repacking
    $progname -profile tests_clean/target.fasta -l tests_clean/model_list.txt -outpath test_out4 -deep yes -repack no
 
 NOTE: It is always recommended to provide full target sequence or pre-built target profile (-fasta or -profile) options.
-Some of the pdb models do not model all residues in the target. If the model is shorter than the target and you don't provide
+Some of the pdb models do not have all residues in the target. If the model is shorter than the target and you don't provide
 the full target sequence, the global scores will be incorrectly normalized and this might also affect psiblast results.
 However, if you are sure that the model has full amino acid sequence, or if the full sequence is not available,
-you can run ProQ3 just by providing the pdb model as in the first example.
+you can run ProQ3 just by providing the pdb model as in the first example. In this case we will extract fasta sequence from the model.
    
-Created 2016-01-28, updated 2016-10-05
+Created 2016-01-28, updated 2017-10-08
 
 Authors: Karolis Uziela (karolis.uziela@gmail.com), David Menéndez Hurtado (david.menendez.hurtado@scilifelab.se), Nanjiang Shu (nanjiang.shu@scilifelab.se), Björn Wallner (bjornw@ifm.liu.se), Arne Elofsson (arne@bioinfo.se)
 
@@ -123,7 +127,7 @@ RunProQ3_with_profile(){
         modelfile=$outpath/$basename_modelfile
     fi
     exec_cmd "$rundir/bin/copy_features_from_master.pl $modelfile $workingseqfile"
-    cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug"
+    cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality"
     if [ "$targetlength" == "" ];then
         targetlength=`tail -n +2 $workingseqfile | tr -d "\n" | wc -c`
     fi
@@ -155,7 +159,7 @@ RunProQ3_without_profile(){
     exec_cmd "$rundir/bin/run_all_external.pl -pdb $modelfile -ncores $ncores"
 
     if [ $isOnlyBuildProfile -eq 0 ]; then
-        cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug"
+        cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality"
         if [ "$targetlength" != "" ];then
             cmd="$cmd -t $targetlength"
         fi
@@ -170,7 +174,6 @@ if [ $# -lt 1 ]; then
     exit
 fi
 
-isQuiet=0
 g_outpath=
 outfile=
 modelListFile=
@@ -185,6 +188,7 @@ verbose=0
 pathprofile=
 isOnlyBuildProfile=0
 ncores=1
+quality='sscore'
 
 isNonOptionArg=0
 while [ "$1" != "" ]; do
@@ -200,7 +204,6 @@ while [ "$1" != "" ]; do
             -fasta|--fasta) targetseqfile=$2;shift;;
             -profile|--profile) pathprofile=$2;shift;;
             -l|--l|-list|--list) modelListFile=$2;shift;;
-            -q|-quiet|--quiet) isQuiet=1;;
             -r|-repack|--repack)optstr=$2;
                 if [ "$optstr" == "yes" ]; then
                     isRepack=yes
@@ -221,6 +224,13 @@ while [ "$1" != "" ]; do
                     exit 1
                 fi
                 shift;; 
+            -q|-quality|--quality)optstr=$2;
+                if [ "$optstr" != "sscore" ] && [ "$optstr" != "tmscore" ] && [ "$optstr" != "lddt" ] && [ "$optstr" != "cad" ] ; then
+                    echo "Bad argument \"$optstr\" after the option -quality, should be sscore, tmscore, lddt or cad"
+                else
+                    quality="$optstr"
+                fi
+                shift;;
             -debug_mode|--debug_mode)optstr=$2;
                 if [ "$optstr" == "yes" ]; then
                     isDebug=yes
@@ -263,6 +273,20 @@ if [ "$modelListFile" != ""  ]; then
         done < $modelListFile
     else
         echo listfile \'$modelListFile\' does not exist or empty. >&2
+        exit 1
+    fi
+fi
+
+if [ "$quality" != "sscore" ] ; then
+    if [ "$isDeep" != "yes" ] ; then
+        echo "Error: Argument -quality $quality can only be used with the deep version of the program, ProQ3D (-deep yes)"
+        exit 1
+    elif [ "$isRepack" != "yes" ] ; then
+        echo "Error: Argument -quality $quality can only be used with repacked models (-repack yes)"
+        exit 1
+    elif [ "$quality" == "lddt" ] ; then 
+        echo "Error: -quality lddt is not yet implemented, but it will be in a couple of days."
+        exit 1
     fi
 fi
 
@@ -304,6 +328,10 @@ if [ "$targetseqfile" != "" -o "$pathprofile" != ""  ];then
         if [ "$workingseqfile" != "$targetseqfile" ];then
             exec_cmd "cp -f $targetseqfile $workingseqfile"
         fi
+        if [ -s "$workingseqfile.psi" ]; then
+            echo "Note: found $workingseqfile.psi in the output directory. Using existing profile instead of a building a new one."
+            pathprofile=$workingseqfile
+        fi
     else
         if [ ! -s "$pathprofile.psi" ];then
             echo "The pathprofile \"$pathprofile\" is supplied, but profile info is empty. " >&2
@@ -312,7 +340,9 @@ if [ "$targetseqfile" != "" -o "$pathprofile" != ""  ];then
         workingseqfile=$pathprofile
     fi
 
-    exec_cmd "$rundir/bin/run_all_external.pl -fasta $workingseqfile -ncores $ncores"
+    if [ "$pathprofile" == "" ] ; then
+        exec_cmd "$rundir/bin/run_all_external.pl -fasta $workingseqfile -ncores $ncores"
+    fi
 
     if [ $isOnlyBuildProfile -eq 0 ] ;then
         for ((i=0;i<numModel;i++));do
@@ -322,6 +352,13 @@ if [ "$targetseqfile" != "" -o "$pathprofile" != ""  ];then
     fi
 
 else
+    echo "
+NOTE: It is always recommended to provide full target sequence or pre-built target profile (-fasta or -profile) options.
+      Some of the pdb models do not have all residues in the target. If the model is shorter than the target and you don't provide
+      the full target sequence, the global scores will be incorrectly normalized and this might also affect psiblast results.
+      However, if you are sure that the model has full amino acid sequence, or if the full sequence is not available,
+      you can run ProQ3 just by providing the pdb model. In this case we will extract fasta sequence from the model.
+"
     for ((i=0;i<numModel;i++));do
         modelfile=${modelList[$i]}
         RunProQ3_without_profile "$modelfile"
