@@ -37,7 +37,7 @@ Input/Output options:
 ProQ3 predictor options:
   -deep  yes|no        Whether to use Deep Learning (Theano) instead of SVM. If 'yes' runs ProQ3D (default: yes)
   -repack  yes|no      Whether to perform the side chain repacking (default: yes)
-  -quality  STR        Which quality measure should be used as the target value in training? Possible options: sscore, tmscore, cad, lddt. Default: sscorea
+  -quality  STR        Which quality measure should be used as the target value in training? Possible options: sscore, tmscore, cad, lddt. Default: sscore
                        Note that quality measures other than sscore are only available when running with -deep yes and -repack yes options.
   -target_length  INT  Set the target length by which the global scores will be normalized (default: length of the target sequence or model)
 
@@ -281,9 +281,6 @@ if [ "$quality" != "sscore" ] ; then
         exit 1
     elif [ "$isRepack" != "yes" ] ; then
         echo "Error: Argument -quality $quality can only be used with repacked models (-repack yes)"
-        exit 1
-    elif [ "$quality" == "lddt" ] ; then 
-        echo "Error: -quality lddt is not yet implemented, but it will be in a couple of days."
         exit 1
     fi
 fi
