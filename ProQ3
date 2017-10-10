@@ -336,7 +336,7 @@ if [[ ! -f $GLOBAL_OUT ]] ; then
         echo "ProQ2D-CAD ProQ3D-CAD" > $GLOBAL_OUT
     elif [[ "$DEEP" == "yes" ]] && [[ "$QUALITY" == "lddt" ]] ; then # ProQ3D-lDDT ProQ3D-CAD and ProQ3D-TM don't have ProQRosCenD ProQRosFAD columns, so they only have 2 columns (ProQ2D and ProQ3D)
         KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq2 $MODEL$R.proq2.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10.proq2_alltarget6_shuffled_lddt_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10.proq2_alltarget6_shuffled_lddt_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
-        KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq2 $MODEL$R.proq2.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_lddt_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_lddt_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
+        KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq3 $MODEL$R.proq3.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_lddt_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_lddt_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
         echo "ProQ2D-lDDT ProQ3D-lDDT" > $LOCAL_OUT
         echo "ProQ2D-lDDT ProQ3D-lDDT" > $GLOBAL_OUT
     else
