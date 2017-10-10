@@ -1,0 +1,8 @@
+# This changelog was created from GIT tags. You can clone a particular version of ProQ3 using a command, such as `git clone --branch v3.1.1 git@bitbucket.org:ElofssonLab/proq3.git`
+
+Date         Tag             Description
+2016-09-29   v3.0            ProQ3 version as published in Nature Scientif Reports, 2016
+2016-10-12   v3.1            ProQ3D - deep learning version
+2017-04-24   v3.1.1          Deep learning version of ProQ3D with keras1, as published in Uziela K, Menéndez Hurtado D, Shu N, Wallner B, Elofsson A (2017) 'ProQ3D: improved model quality assessments using deep learning' Bioinformatics, doi: 10.1093/bioinformatics/btw819, PMID: 28052925.
+2017-04-24   v3.1.2          Deep learning version of ProQ3D that works with keras v.2 (although models were trained with keras v.1)
+2017-10-10   v3.2            ProQ3D version that supports S-score, TM-score, CAD and lDDT quality measures
