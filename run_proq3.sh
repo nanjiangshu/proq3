@@ -62,8 +62,8 @@ Examples:
    # run ProQ3D for a list of models with pre-built profile and without repacking
    $progname -profile tests_clean/target.fasta -l tests_clean/model_list.txt -outpath test_out4 -deep yes -repack no
 
-NOTE: If you don't provide target protein sequence in fasta format, the sequence will be extracted from the model. However, please,
-always provide the target protien fasta sequence, unless you are sure that the model has full amino acid sequence, as in target protein. 
+NOTE: If you don't provide target protein amino acid sequence in fasta format, the sequence will be extracted from the model. However, please,
+always provide the target protein fasta sequence, unless you are sure that the model has a full amino acid sequence as in the target protein. 
 Otherwise, ProQ3 results will not be accurate.
   
 Created 2016-01-28, updated 2017-10-08

@@ -230,8 +230,8 @@ Other options:
 
         $ run_proq3.sh -profile tests_clean/target.fasta -l tests_clean/model_list.txt -outpath test_out4 -deep yes -repack no
 
-NOTE: If you don't provide target protein sequence in fasta format, the sequence will be extracted from the model. However, please,
-always provide the target protein fasta sequence, unless you are sure that the model has full amino acid sequence, as in target protein.
+NOTE: If you don't provide target protein amino acid sequence in fasta format, the sequence will be extracted from the model. However, please,
+always provide the target protein fasta sequence, unless you are sure that the model has a full amino acid sequence as in the target protein.
 Otherwise, ProQ3 results will not be accurate.
 
 ###Output files
