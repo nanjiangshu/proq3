@@ -1,5 +1,6 @@
 ./download
 ./log
+.git
 test
 test.60391
 test.60391.tar.gz
@@ -12,4 +13,6 @@ database
 paths.sh
 
 apps/rosetta
+
+*.img
 
