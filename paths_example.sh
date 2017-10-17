@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ############# Please set the paths here #############
-SCRIPT_PATH=`realpath ${BASH_SOURCE[0]}`
+SCRIPT_PATH=`readlink -f ${BASH_SOURCE[0]}`
 rundir=`dirname $SCRIPT_PATH`
 
 rosetta_path=$rundir/apps/rosetta/                                 # Path to Rosetta installation

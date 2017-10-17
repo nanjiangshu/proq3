@@ -140,6 +140,8 @@ If you would like to use the deep learning version of the predictor (ProQ3D), th
 
 4. If you don't have "keras" package, install it by typing `pip install keras`
 
+5. If you don't have "Theano" package, install it by typing `pip install Theano`
+
 ##Test run
 
 Go to ProQ3 installation directory and type 
