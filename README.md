@@ -119,8 +119,7 @@ If you don't have a formatted sequence database follow these steps:
 
     2. Extract the files using command `gunzip uniref90.fasta.gz`
 
-    3. Format the sequence database using command `<ProQ3_dir>/apps/blast-2.2.26/bin/formatdb -i 
-uniref90.fasta
+    3. Format the sequence database using command `<ProQ3_dir>/apps/blast-2.2.26/bin/formatdb -i uniref90.fasta`
 
     4. Set $DB variable in ./bin/run_all_external.pl to your uniref90.fasta file
 
@@ -259,6 +258,28 @@ If you are using the deep learning version of the predictor (-deep option), then
 ProQ2D, ProQRosCenD, ProQRosFAD and ProQ3D which correspond to deep learning version scores.
 
 If you are only interested in ProQ3/ProQ3D scores, you can simply use the 4th column in [pdb-model].proq3.local and [pdb-model].proq3.global files.
+
+###Running ProQ3 with GNU Parallel
+
+Since ProQ3D version 3.2.1 we provide a helper script `./proq3_all.sh` to run ProQ3D on multiple pdb files for multiple quality measures using GNU Parallel.
+
+The script takes 4 arguments:
+1) Fasta file of the target protein sequence
+2) A file with the list of pdb models for that target
+3) Output directory
+4) Number of cores
+
+$ ./proq3_all.sh ./test_fasta/target.fasta ./tests_clean/pdb_file_list.txt ./test_multiple_out 8
+
+The script proq3_all.sh is provided for indicative purposes. Feel free to modify it for your own needs.
+
+If you simply want to loop over pdb files and quality measures without parallelization, you can also run:
+
+$ ./run_proq3.sh -only-build-profile -fasta $fasta_file
+$ for q in sscore tmscore lddt cad
+$ do
+$     ./run_proq3.sh -profile $fasta_file -l $pdb_file_list -keep_files yes -quality $q
+$ done
 
 ###Options explained in more detail
 

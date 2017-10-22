@@ -128,11 +128,11 @@ if [[ $TARGET_LENGTH != "" ]] ; then
 fi
 
 if [[ $GLOBAL_OUT == "" ]] ; then
-    GLOBAL_OUT=$MODEL.proq3.global
+    GLOBAL_OUT=$MODEL.proq3.$QUALITY.global
 fi
 
 if [[ $LOCAL_OUT == "" ]] ; then
-    LOCAL_OUT=$MODEL.proq3.local
+    LOCAL_OUT=$MODEL.proq3.$QUALITY.local
 fi
 
 if [[ -f $GLOBAL_OUT ]] ; then
@@ -256,7 +256,7 @@ if [[ ! -f $MODEL$R ]] ; then
     fi
 fi
 
-if [[ ! -f $MODEL$R.features.proq2.$$.temp ]] ; then
+if [[ ! -f $MODEL$R.proq3.svm && ! -f $MODEL$R.features.proq2.$$.temp ]] ; then
     echo "------------------- Extracting ProQ2 features -------------------"
     $ROSETTA_BIN/score.linuxgccrelease -database $ROSETTA_DB -in:file:fullatom -ProQ:basename $MODEL$R -in:file:s $MODEL$R -score:weights ProQ2 -ProQ:output_feature_vector -ignore_zero_occupancy F > $MODEL$R.features.$$.temp 
     sed '/^Outfile:/q' $MODEL$R.features.$$.temp > $MODEL$R.features.$$.temp2
@@ -278,7 +278,7 @@ if [[ ! -f $MODEL$R$M ]] ; then
     cd $CURRENT_DIR
 fi
 
-if [[ ! -f $MODEL$R$M.score.$$.temp ]] ; then
+if [[ ! -f $MODEL$R.proq3.svm && ! -f $MODEL$R$M.score.$$.temp ]] ; then
     echo "------------------- Calculating Rosetta energies -------------------"
     $ROSETTA_BIN/per_residue_energies.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp -score:weights $PROQ3_DIR/weights/talaris2013.wts -ignore_zero_occupancy F >>$ROSETTA_LOG
     $ROSETTA_BIN/per_residue_energies.linuxgccrelease -in:file:s $MODEL$R$M -database $ROSETTA_DB -out:file:silent $MODEL$R$M.score.$$.temp2 -score:weights $PROQ3_DIR/weights/some_centroid.wts -in:file:residue_type_set centroid -ignore_zero_occupancy F >>$ROSETTA_LOG
@@ -339,6 +339,7 @@ if [[ ! -f $GLOBAL_OUT ]] ; then
         KERAS_BACKEND=theano $PYTHON_BIN $PROQ3_DIR/ProQ3_scripts/predict_theano.py $MODEL$R.proq3 $MODEL$R.proq3.pred.$$.temp $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_lddt_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_model.json $PROQ3_DIR/theano_models/casp9-and-casp10.proq3_lddt_shuffled_ONLY_L2_ADADELTA_model_500_1e-11_weights.h5
         echo "ProQ2D-lDDT ProQ3D-lDDT" > $LOCAL_OUT
         echo "ProQ2D-lDDT ProQ3D-lDDT" > $GLOBAL_OUT
+
     else
         echo "ERROR: invalid --deep or --quality parameter"
     fi    
@@ -356,7 +357,8 @@ if [[ ! -f $GLOBAL_OUT ]] ; then
     fi
 
     if [[ $DEBUG == "no" ]] ; then
-        rm -f $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp $MODEL$R.proq3 $MODEL$R.proq2 $MODEL$R.highres $MODEL$R.lowres
+        rm -f $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp 
+	#$MODEL$R.proq3 $MODEL$R.proq2 $MODEL$R.highres $MODEL$R.lowres
     fi
 fi
 

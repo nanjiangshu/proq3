@@ -23,14 +23,14 @@ echo "------------- Testing ProQ3 ------------------"
 ./run_proq3.sh test.$num/1e12A_0001.pdb -profile test.$num/target.fasta -repack no --debug_mode yes -deep no
 ./run_proq3.sh test.$num/1e12A_0001.subset.pdb -profile test.$num/target.fasta -repack yes --debug_mode yes -deep no
 
-if [[ ! -f test.$num/1e12A_0001.pdb.proq3.local || ! -f test.$num/1e12A_0001.pdb.proq3.global || ! -f test.$num/1e12A_0001.subset.pdb.proq3.local || ! -f test.$num/1e12A_0001.subset.pdb.proq3.global ]] ; then
+if [[ ! -f test.$num/1e12A_0001.pdb.proq3.sscore.local || ! -f test.$num/1e12A_0001.pdb.proq3.sscore.global || ! -f test.$num/1e12A_0001.subset.pdb.proq3.sscore.local || ! -f test.$num/1e12A_0001.subset.pdb.proq3.sscore.global ]] ; then
     echo "ERROR: ProQ3 failed to run. The output files don't exist"
     exit 1
 else
-    check1=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001.pdb.proq3.local tests_clean/1e12A_0001.pdb.proq3.local test.$num/1e12A_0001.pdb.proq3.global tests_clean/1e12A_0001.pdb.proq3.global 2>&1`
-    check2=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001.pdb.proq3.local tests_clean/1e12A_0001.pdb.proq3.local test.$num/1e12A_0001.pdb.proq3.global tests_clean/1e12A_0001.pdb.proq3.global 2>&1`
-    check3=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001.subset.pdb.proq3.local tests_clean/1e12A_0001.subset.pdb.proq3.local test.$num/1e12A_0001.subset.pdb.proq3.global tests_clean/1e12A_0001.subset.pdb.proq3.global 2>&1`
-    check4=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001.subset.pdb.proq3.local tests_clean/1e12A_0001.subset.pdb.proq3.local test.$num/1e12A_0001.subset.pdb.proq3.global tests_clean/1e12A_0001.subset.pdb.proq3.global 2>&1`
+    check1=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001.pdb.proq3.sscore.local tests_clean/1e12A_0001.pdb.proq3.sscore.local test.$num/1e12A_0001.pdb.proq3.sscore.global tests_clean/1e12A_0001.pdb.proq3.sscore.global 2>&1`
+    check2=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001.pdb.proq3.sscore.local tests_clean/1e12A_0001.pdb.proq3.sscore.local test.$num/1e12A_0001.pdb.proq3.sscore.global tests_clean/1e12A_0001.pdb.proq3.sscore.global 2>&1`
+    check3=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001.subset.pdb.proq3.sscore.local tests_clean/1e12A_0001.subset.pdb.proq3.sscore.local test.$num/1e12A_0001.subset.pdb.proq3.sscore.global tests_clean/1e12A_0001.subset.pdb.proq3.sscore.global 2>&1`
+    check4=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001.subset.pdb.proq3.sscore.local tests_clean/1e12A_0001.subset.pdb.proq3.sscore.local test.$num/1e12A_0001.subset.pdb.proq3.sscore.global tests_clean/1e12A_0001.subset.pdb.proq3.sscore.global 2>&1`
 fi
 
 if [[ $DEEP_INSTALLED == "yes" ]] ; then
@@ -39,14 +39,14 @@ if [[ $DEEP_INSTALLED == "yes" ]] ; then
     ./run_proq3.sh test.$num/1e12A_0001_deep.pdb -profile test.$num/target.fasta -repack no --debug_mode yes -deep yes
     ./run_proq3.sh test.$num/1e12A_0001_deep.subset.pdb -profile test.$num/target.fasta -repack yes --debug_mode yes -deep yes
 
-    if [[ ! -f test.$num/1e12A_0001_deep.pdb.proq3.local || ! -f test.$num/1e12A_0001_deep.pdb.proq3.global ]] ; then
+    if [[ ! -f test.$num/1e12A_0001_deep.pdb.proq3.sscore.local || ! -f test.$num/1e12A_0001_deep.pdb.proq3.sscore.global ]] ; then
         echo "ERROR: ProQ3D failed to run. The output files don't exist"
         exit 1
     else
-        check1d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.pdb.proq3.local tests_clean/1e12A_0001_deep.pdb.proq3.local test.$num/1e12A_0001_deep.pdb.proq3.global tests_clean/1e12A_0001_deep.pdb.proq3.global 2>&1`
-        check2d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.pdb.proq3.local tests_clean/1e12A_0001_deep.pdb.proq3.local test.$num/1e12A_0001_deep.pdb.proq3.global tests_clean/1e12A_0001_deep.pdb.proq3.global 2>&1`
-        check3d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.subset.pdb.proq3.local tests_clean/1e12A_0001_deep.subset.pdb.proq3.local test.$num/1e12A_0001_deep.subset.pdb.proq3.global tests_clean/1e12A_0001_deep.subset.pdb.proq3.global 2>&1`
-        check4d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.subset.pdb.proq3.local tests_clean/1e12A_0001_deep.subset.pdb.proq3.local test.$num/1e12A_0001_deep.subset.pdb.proq3.global tests_clean/1e12A_0001_deep.subset.pdb.proq3.global 2>&1`
+        check1d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.pdb.proq3.sscore.local tests_clean/1e12A_0001_deep.pdb.proq3.sscore.local test.$num/1e12A_0001_deep.pdb.proq3.sscore.global tests_clean/1e12A_0001_deep.pdb.proq3.sscore.global 2>&1`
+        check2d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.pdb.proq3.sscore.local tests_clean/1e12A_0001_deep.pdb.proq3.sscore.local test.$num/1e12A_0001_deep.pdb.proq3.sscore.global tests_clean/1e12A_0001_deep.pdb.proq3.sscore.global 2>&1`
+        check3d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.subset.pdb.proq3.sscore.local tests_clean/1e12A_0001_deep.subset.pdb.proq3.sscore.local test.$num/1e12A_0001_deep.subset.pdb.proq3.sscore.global tests_clean/1e12A_0001_deep.subset.pdb.proq3.sscore.global 2>&1`
+        check4d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.subset.pdb.proq3.sscore.local tests_clean/1e12A_0001_deep.subset.pdb.proq3.sscore.local test.$num/1e12A_0001_deep.subset.pdb.proq3.sscore.global tests_clean/1e12A_0001_deep.subset.pdb.proq3.sscore.global 2>&1`
     fi
 
 fi
