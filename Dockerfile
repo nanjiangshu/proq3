@@ -38,17 +38,16 @@ RUN pip install biopython==1.70 \
 #================================
 #  Add proq3 source code
 #===============================
-WORKDIR /home/app
+WORKDIR /app
 # add the source code to WORKDIR/home/app
 ADD . ./proq3
 
-RUN cd /home/app/proq3 &&\
+RUN cd /app/proq3 &&\
     cp paths_example.sh paths.sh &&\
     ./configure.pl
 
 
-RUN mkdir -p /home/download  \
-          /home/app/proq3/database \
+RUN mkdir -p /app/proq3/database \
           /home/user/.keras
 
 #================================
@@ -59,10 +58,9 @@ RUN echo  "{\n  \"backend\": \"theano\",\n  \"epsilon\": 1e-07,\n  \"floatx\": \
 #================================
 # Setting library path for rosetta
 #===============================
-ENV LD_LIBRARY_PATH "/home/app/proq3/apps/rosetta/main/source/build/src/release/linux/3.13/64/x86/gcc/4.8/default/:/home/app/proq3/apps/rosetta/main/source/build/external/release/linux/3.13/64/x86/gcc/4.8/default/"
-
-ENV USER_DIRS "/home/app"
+ENV LD_LIBRARY_PATH "/app/proq3/apps/rosetta/main/source/build/src/release/linux/3.13/64/x86/gcc/4.8/default/:/app/proq3/apps/rosetta/main/source/build/external/release/linux/3.13/64/x86/gcc/4.8/default/"
 
 RUN export LC_ALL="en_US.UTF-8"
+
 
 CMD ["/bin/bash" ]
