@@ -45,21 +45,21 @@ installation of Docker.
    can be started with any user to your preference. We also mount the dir
    `/scratch` on localhost to the `/scratch` within the container.
 
-    `docker run  -e USER_ID=$(id -u $USER) -v /data/blastdb:/home/app/proq3/database/blastdb -v /data/rosetta/rosetta_2014.16.56682_bundle:/home/app/proq3/apps/rosetta -v /scratch:/scratch  -it --name proq3 -d  nanjiang/proq3`
+    `docker run  -e USER_ID=$(id -u $USER) -v /data/blastdb:/app/proq3/database/blastdb -v /data/rosetta/rosetta_2014.16.56682_bundle:/app/proq3/apps/rosetta -v /scratch:/scratch  -it --name proq3 -d  nanjiang/proq3`
 
 5. Now you can test run the ProQ3 command 
 
 * Run ProQ3 for the model `1e12A_0001.pdb` with prebuilt profile and output the result to `/scratch/outproq3-1`
 
-    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /home/app/proq3/tests_clean/1e12A_0001.pdb -profile /home/app/proq3/tests_clean/target.fasta -outpath /scratch/outproq3-1"`
+    `docker exec  proq3 script /dev/null -c "/app/proq3/run_proq3.sh /app/proq3/tests_clean/1e12A_0001.pdb -profile /app/proq3/tests_clean/target.fasta -outpath /scratch/outproq3-1"`
 
 * Run ProQ3 for the model `1e12A_0001.pdb` with from scratch (blastpgp will be run) and output the result to `/scratch/outproq3-2`
 
-    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /home/app/proq3/tests_clean/1e12A_0001.pdb -fasta /home/app/proq3/tests_clean/target.fasta -outpath /scratch/outproq3-2"`
+    `docker exec  proq3 script /dev/null -c "/app/proq3/run_proq3.sh /app/proq3/tests_clean/1e12A_0001.pdb -fasta /app/proq3/tests_clean/target.fasta -outpath /scratch/outproq3-2"`
 
 * Run ProQ3 with your own model structure and fasta sequence, e.g. at `/scratch/yourmodel.pdb; /scratch/yourmodel.fasta` and output the result to `/scratch/out-yourmodel`
 
-    `docker exec  proq3 script /dev/null -c "/home/app/proq3/run_proq3.sh /scratch/yourmodel.pdb -fasta /scratch/yourmodel.fasta -outpath /scratch/out-yourmodel"`
+    `docker exec  proq3 script /dev/null -c "/app/proq3/run_proq3.sh /scratch/yourmodel.pdb -fasta /scratch/yourmodel.fasta -outpath /scratch/out-yourmodel"`
 
 
 ### More details of the ProQ3/ProQ3D package are described below
