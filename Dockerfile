@@ -49,6 +49,7 @@ RUN cd /app/proq3 &&\
 
 # compatible with singularity, cause singularity path binding needs the folders to be exist
 RUN mkdir -p /app/proq3/database/blastdb \
+            /app/proq3/apps/rosetta \
             /scratch \
           /home/user/.keras
 
