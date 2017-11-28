@@ -63,7 +63,7 @@ RUN echo  "{\n  \"backend\": \"theano\",\n  \"epsilon\": 1e-07,\n  \"floatx\": \
 #===============================
 ENV LD_LIBRARY_PATH "/app/proq3/apps/rosetta/main/source/build/src/release/linux/3.13/64/x86/gcc/4.8/default/:/app/proq3/apps/rosetta/main/source/build/external/release/linux/3.13/64/x86/gcc/4.8/default/"
 
-RUN export LC_ALL="en_US.UTF-8"
+ENV LC_ALL "en_US.UTF-8"
 
 
 CMD ["/bin/bash" ]

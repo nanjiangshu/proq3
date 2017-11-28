@@ -41,7 +41,7 @@ fi
 
 formatdb=$rundir/apps/blast-2.2.26/bin/formatdb
 
-IsProgExist formatdb
+IsProgExist $formatdb
 IsProgExist gzip
 IsProgExist readlink
 
