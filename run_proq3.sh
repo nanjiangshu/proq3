@@ -36,11 +36,12 @@ Input/Output options:
   -debug_mode  yes|no  Whether to keep all temporary files
 
 ProQ3 predictor options:
-  -deep  yes|no        Whether to use Deep Learning (Theano) instead of SVM. If 'yes' runs ProQ3D (default: yes)
-  -repack  yes|no      Whether to perform the side chain repacking (default: yes)
-  -quality  STR        Which quality measure should be used as the target value in training? Possible options: sscore, tmscore, cad, lddt. Default: sscore
-                       Note that quality measures other than sscore are only available when running with -deep yes and -repack yes options.
-  -target_length  INT  Set the target length by which the global scores will be normalized (default: length of the target sequence or model)
+  -deep  yes|no                Whether to use Deep Learning (Theano) instead of SVM. If 'yes' runs ProQ3D (default: yes)
+  -repack  yes|no              Whether to perform the side chain repacking (default: yes)
+  -use_constant_seed yes|no    Whether to use a constant seed when runing Rosetta for side chain repacking (default: yes)
+  -quality  STR                Which quality measure should be used as the target value in training? Possible options: sscore, tmscore, cad, lddt. Default: sscore
+                               Note that quality measures other than sscore are only available when running with -deep yes and -repack yes options.
+  -target_length  INT          Set the target length by which the global scores will be normalized (default: length of the target sequence or model)
 
 Other options:
   -ncores              How many CPU cores should be used when building psiblast profile (default: 1)
@@ -126,7 +127,7 @@ RunProQ3_with_profile(){
         modelfile=$outpath/$basename_modelfile
     fi
     exec_cmd "$rundir/bin/copy_features_from_master.pl $modelfile $workingseqfile"
-    cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality --output_pdbs $isOutputPDB"
+    cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality --output_pdbs $isOutputPDB --use_constant_seed $isConstantSeed"
     if [ "$targetlength" == "" ];then
         targetlength=`tail -n +2 $workingseqfile | tr -d "\n" | wc -c`
     fi
@@ -158,7 +159,7 @@ RunProQ3_without_profile(){
     exec_cmd "$rundir/bin/run_all_external.pl -pdb $modelfile -ncores $ncores"
 
     if [ $isOnlyBuildProfile -eq 0 ]; then
-        cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality --output_pdbs $isOutputPDB"
+        cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality --output_pdbs $isOutputPDB --use_constant_seed $isConstantSeed"
         if [ "$targetlength" != "" ];then
             cmd="$cmd -t $targetlength"
         fi
@@ -183,6 +184,7 @@ isDeep=yes
 isDebug=no
 isKeepFiles=no
 isOutputPDB=no
+isConstantSeed=yes
 targetLength=
 verbose=0
 pathprofile=
@@ -260,7 +262,17 @@ while [ "$1" != "" ]; do
                     echo "Bad argument \"$optstr\" after the option -output_pdbs, should be yes or no" >&2
                     exit 1
                 fi
-                shift;;              
+                shift;;             
+            -use_constant_seed|--use_constant_seed)optstr=$2;
+                if [ "$optstr" == "yes" ]; then
+                    isConstantSeed=yes
+                elif [ "$optstr" == "no" ];then
+                    isConstantSeed=no
+                else
+                    echo "Bad argument \"$optstr\" after the option -output_pdbs, should be yes or no" >&2
+                    exit 1
+                fi
+                shift;;           
             -t|-target_length|--target_length) targetlength=$2;shift;;
             -ncores|--ncores) ncores=$2;shift;;
             -verbose|--verbose) verbose=1;;

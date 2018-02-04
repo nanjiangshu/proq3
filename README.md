@@ -193,11 +193,12 @@ Input/Output options:
   -debug_mode  yes|no  Whether to keep all temporary files
 
 ProQ3 predictor options:
-  -deep  yes|no        Whether to use Deep Learning (Theano) instead of SVM. If 'yes' runs ProQ3D (default: yes)
-  -repack  yes|no      Whether to perform the side chain repacking (default: yes)
-  -quality  STR        Which quality measure should be used as the target value in training? Possible options: sscore, tmscore, cad, lddt. Default: sscorea
-                       Note that quality measures other than sscore are only available when running with -deep yes and -repack yes options.
-  -target_length  INT  Set the target length by which the global scores will be normalized (default: length of the target sequence or model)
+  -deep  yes|no                Whether to use Deep Learning (Theano) instead of SVM. If 'yes' runs ProQ3D (default: yes)
+  -repack  yes|no              Whether to perform the side chain repacking (default: yes)
+  -use_constant_seed yes|no    Whether to use a constant seed when runing Rosetta for side chain repacking (default: yes)
+  -quality  STR                Which quality measure should be used as the target value in training? Possible options: sscore, tmscore, cad, lddt. Default: sscorea
+                               Note that quality measures other than sscore are only available when running with -deep yes and -repack yes options.
+  -target_length  INT          Set the target length by which the global scores will be normalized (default: length of the target sequence or model)
 
 Other options:
   -ncores              How many CPU cores should be used when building psiblast profile (default: 1)
@@ -244,6 +245,9 @@ The default output files are:
 
     * [pdb-model].proq3.global - global scores (the predicted quality of the whole model)
 
+    * [pdb-model].[method]_bfactor.pdb - pdb files with local scores in b-factor column (only when running with -output_pdbs yes option).
+                                         [method] here is proq3, proq2, proqroscen or proqrosfa.
+
 Both local and global score files will contain 4 columns:
 
 1. ProQ2 - ProQ2 prediction (as in the original ProQ2, but retrained on CASP9 data)
@@ -259,6 +263,11 @@ If you are using the deep learning version of the predictor (-deep option), then
 ProQ2D, ProQRosCenD, ProQRosFAD and ProQ3D which correspond to deep learning version scores.
 
 If you are only interested in ProQ3/ProQ3D scores, you can simply use the 4th column in [pdb-model].proq3.local and [pdb-model].proq3.global files.
+
+IMPORTANT NOTE: ProQ3/ProQ3D is a regression based method. When training the method we used only values between 0 and 1 as our target quality measure.
+                However, there is no guarantee that the predicted value will be between 0 and 1. Occasionally, it can predict values slightly below 0 or slightly above 1.
+                If you would like to have values between 0 and 1, you might do some post-processing. However, in our experience, the correlation between the predicted values
+                and the real values might slightly drop if you limit them between 0 and 1.
 
 ###Running ProQ3 with GNU Parallel
 
@@ -313,6 +322,9 @@ if you want to use another directory for the output, you can use this option.
 * -repack             Controls whether the side chain rebuilding and energy minimization steps 
 should be performed before evaluating the model structure. This takes more time, but the results 
 are usually a little bit more accurate.
+
+*  -use_constant_seed yes|no    Whether to use a constant seed when runing Rosetta for side chain repacking (default: yes)
+                      Choosing 'yes' provides more reproducible results, because the random seed is constant when running Rosetta.
 
 * -deep               Controls whether we should use deep learning version of the predictor (ProQ3D) or SVM (ProQ3) 
 
