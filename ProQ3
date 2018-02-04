@@ -33,6 +33,8 @@ Usage: $SCRIPT_NAME [parameters]
                              The output file for global predictions
 -o/--rosetta_log         [rosetta_log_file] default=[pdb-model].rosetta.log
                              The output file with Rosetta logs
+--output_pdbs            [yes/no] default=no
+                             Output PDB files with ProQ3 local scores in the b-factor field
 --debug_mode             [yes/no] default=no 
                              Debug mode keeps all temporary files
 "
@@ -69,7 +71,7 @@ case $key in
     TARGET_LENGTH="$2"
     shift # past argument
     ;;
-    -k|--keep)
+    -k|--keep_files)
     KEEP="$2"
     shift # past argument
     ;;
@@ -83,6 +85,10 @@ case $key in
     ;;
     -o|--rosetta_log)
     ROSETTA_LOG="$2"
+    shift # past argument
+    ;;
+    --output_pdbs)
+    OUTPUT_PDBS="$2"
     shift # past argument
     ;;
     -d|--debug_mode)
@@ -117,6 +123,34 @@ elif [[  ${MODEL: -4} != ".pdb" ]] ; then
         fi
     done
     MODEL=$MODEL.pdb
+fi
+
+
+if [[ $REPACK == "yes" ]] || [[ $REPACK == "Yes" ]] || [[ $REPACK == "YES" ]] || [[ $REPACK == "" ]] ; then
+    R=".repacked"
+    M=".minimized"
+elif [[ $REPACK == "no" ]] || [[ $REPACK == "No" ]] ||  [[ $REPACK == "NO" ]] ; then
+    R=""
+    M=""
+else
+    echo "ERROR: -r/--reppack $REPACK value is not recognized"
+    usage
+fi
+
+
+if [[ $QUALITY == "" ]] || [[ $QUALITY == "sscore" ]] ; then
+    QUALITY="sscore"
+elif [[ $QUALITY == "lddt" ]] || [[ $QUALITY == "cad" ]] || [[ $QUALITY == "tmscore" ]] ; then
+    if [[ $DEEP == "no" ]] ; then 
+        echo "ERROR: Currently --quality $QUALITY is only supported when running the deep version of the predictor, ProQ3D (--deep yes)"
+        exit 1
+    elif [[ $R == "" ]] ; then
+        echo "ERROR: Currently --quality $QUALITY is only supported when running ProQ3D with repacked models (-r/--repack yes)"
+        exit 1
+    fi
+else 
+    echo "ERROR: wrong --quality $QUALITY parameter. Supported --quality parameters: sscore, tmscore, lddt, cad"
+    exit 1
 fi
 
 if [[ $TARGET_LENGTH != "" ]] ; then
@@ -158,33 +192,6 @@ else
     usage
 fi
 
-if [[ $REPACK == "yes" ]] || [[ $REPACK == "Yes" ]] || [[ $REPACK == "YES" ]] || [[ $REPACK == "" ]] ; then
-    R=".repacked"
-    M=".minimized"
-elif [[ $REPACK == "no" ]] || [[ $REPACK == "No" ]] ||  [[ $REPACK == "NO" ]] ; then
-    R=""
-    M=""
-else
-    echo "ERROR: -r/--reppack $REPACK value is not recognized"
-    usage
-fi
-
-if [[ $QUALITY == "" ]] || [[ $QUALITY == "sscore" ]] ; then
-    QUALITY="sscore"
-elif [[ $QUALITY == "lddt" ]] || [[ $QUALITY == "cad" ]] || [[ $QUALITY == "tmscore" ]] ; then
-    if [[ $DEEP == "no" ]] ; then 
-        echo "ERROR: Currently --quality $QUALITY is only supported when running the deep version of the predictor, ProQ3D (--deep yes)"
-        exit 1
-    elif [[ $R == "" ]] ; then
-        echo "ERROR: Currently --quality $QUALITY is only supported when running ProQ3D with repacked models (-r/--repack yes)"
-        exit 1
-    fi
-else 
-    echo "ERROR: wrong --quality $QUALITY parameter. Supported --quality parameters: sscore, tmscore, lddt, cad"
-    exit 1
-fi
-
-
 if [[ $ROSETTA_LOG == "" ]] ; then
     MODEL_PATH=`readlink -f $MODEL`
     ROSETTA_LOG="${MODEL_PATH}.rosetta.log"
@@ -207,6 +214,17 @@ else
     echo "ERROR: --debug_mode $DEBUG value is not recognized (should be yes or no)"
     usage
 fi
+
+if [[ $OUTPUT_PDBS == "no" ]] || [[ $OUTPUT_PDBS == "No" ]] || [[ $OUTPUT_PDBS == "NO" ]] || [[ $OUTPUT_PDBS == "" ]] ; then
+    OUTPUT_PDBS="no"
+elif [[ $OUTPUT_PDBS == "yes" ]] || [[ $OUTPUT_PDBS == "Yes" ]] ||  [[ $OUTPUT_PDBS == "YES" ]] ; then
+    OUTPUT_PDBS="yes"
+else
+    echo "ERROR: --output_pdbs $OUTPUT_PDBS value is not recognized (should be yes or no)"
+    usage
+fi
+
+
 
 if [[ ! -f $MODEL.ss2 || ! -f $MODEL.acc || ! -f $MODEL.psi || ! -f $MODEL.mtx ]] ; then
     echo "ERROR: .ss2 .acc .psi or .mtx file is missing. Run <ProQ3_dir>/bin/run_all_external.pl first. Check README for details."
@@ -350,9 +368,19 @@ if [[ ! -f $GLOBAL_OUT ]] ; then
 
     if [[ "$QUALITY" == "sscore" ]] ; then
         paste -d " " $MODEL$R.proq2.pred.$$.temp $MODEL$R.lowres.pred.$$.temp $MODEL$R.highres.pred.$$.temp $MODEL$R.proq3.pred.$$.temp >> $LOCAL_OUT
+        if [[ "$OUTPUT_PDBS" == "yes" ]] ; then
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq2.pred.$$.temp $MODEL$R.proa2_bfactor.pdb
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.lowres.pred.$$.temp $MODEL$R.proaroscen_bfactor.pdb
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.highres.pred.$$.temp $MODEL$R.proarosfa_bfactor.pdb
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq3.pred.$$.temp $MODEL$R.proa3_bfactor.pdb
+        fi
         tail -n +2 $LOCAL_OUT | awk -v my_length="$TARGET_LENGTH" '{ sum1 += $1 ; sum2 += $2 ; sum3 += $3 ; sum4 += $4 } END { if (my_length > 0) print sum1 / my_length, sum2 / my_length, sum3 / my_length, sum4 / my_length }' >> $GLOBAL_OUT
     else # ProQ3D-lDDT ProQ3D-CAD and ProQ3D-TM don't have ProQRosCenD ProQRosFAD columns, so they only have 2 columns (ProQ2D and ProQ3D)
         paste -d " " $MODEL$R.proq2.pred.$$.temp $MODEL$R.proq3.pred.$$.temp >> $LOCAL_OUT
+        if [[ "$OUTPUT_PDBS" == "yes" ]] ; then
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq2.pred.$$.temp $MODEL$R.proa2_bfactor.pdb
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq3.pred.$$.temp $MODEL$R.proa3_bfactor.pdb
+        fi
         tail -n +2 $LOCAL_OUT | awk -v my_length="$TARGET_LENGTH" '{ sum1 += $1 ; sum2 += $2 } END { if (my_length > 0) print sum1 / my_length, sum2 / my_length }' >> $GLOBAL_OUT
     fi
 

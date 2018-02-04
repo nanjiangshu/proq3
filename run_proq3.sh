@@ -31,6 +31,7 @@ Input/Output options:
   -profile  STR        Path for pre-built profile
   -only-build-profile  Build sequence profile without running ProQ3
   -outpath  DIR        Set output path, (default: the same as model file)
+  -output_pdbs yes|no  Whether to output pdb files with ProQ3 local scores in B-factor field (default: no)
   -keep_files  yes|no  Whether to keep repacked models and SVM output (default: no)
   -debug_mode  yes|no  Whether to keep all temporary files
 
@@ -125,7 +126,7 @@ RunProQ3_with_profile(){
         modelfile=$outpath/$basename_modelfile
     fi
     exec_cmd "$rundir/bin/copy_features_from_master.pl $modelfile $workingseqfile"
-    cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality"
+    cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality --output_pdbs $isOutputPDB"
     if [ "$targetlength" == "" ];then
         targetlength=`tail -n +2 $workingseqfile | tr -d "\n" | wc -c`
     fi
@@ -157,7 +158,7 @@ RunProQ3_without_profile(){
     exec_cmd "$rundir/bin/run_all_external.pl -pdb $modelfile -ncores $ncores"
 
     if [ $isOnlyBuildProfile -eq 0 ]; then
-        cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality"
+        cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality --output_pdbs $isOutputPDB"
         if [ "$targetlength" != "" ];then
             cmd="$cmd -t $targetlength"
         fi
@@ -181,6 +182,7 @@ isRepack=yes
 isDeep=yes
 isDebug=no
 isKeepFiles=no
+isOutputPDB=no
 targetLength=
 verbose=0
 pathprofile=
@@ -249,6 +251,16 @@ while [ "$1" != "" ]; do
                     exit 1
                 fi
                 shift;;
+            -output_pdbs|--output_pdbs)optstr=$2;
+                if [ "$optstr" == "yes" ]; then
+                    isOutputPDB=yes
+                elif [ "$optstr" == "no" ];then
+                    isOutputPDB=no
+                else
+                    echo "Bad argument \"$optstr\" after the option -output_pdbs, should be yes or no" >&2
+                    exit 1
+                fi
+                shift;;              
             -t|-target_length|--target_length) targetlength=$2;shift;;
             -ncores|--ncores) ncores=$2;shift;;
             -verbose|--verbose) verbose=1;;

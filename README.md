@@ -189,6 +189,7 @@ Input/Output options:
   -only-build-profile  Build sequence profile without running ProQ3
   -outpath  DIR        Set output path, (default: the same as model file)
   -keep_files  yes|no  Whether to keep repacked models and SVM output (default: no)
+  -output_pdbs yes|no  Whether to output pdb files with ProQ3 local scores in B-factor field (default: no)  
   -debug_mode  yes|no  Whether to keep all temporary files
 
 ProQ3 predictor options:
@@ -339,6 +340,8 @@ minimization step in Rosetta
     * [pdb-model].highres.svm           SVM input file for ProQ_highres
     * [pdb-model].proq3.svm             SVM input file for ProQ3
     * [pdb-model].rosetta.log           Rosetta log file
+
+* -output_pdbs yes|no This option outputs ProQ scores in the pdb file B-factor column
 
 * -debug_mode         Keeps all temporary files. 
 
