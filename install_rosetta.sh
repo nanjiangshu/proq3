@@ -32,7 +32,7 @@ echo "The Rosetta package will be installed at $INSTALL_PATH ..."
 
 pushd "$INSTALL_PATH"
 
-url=https://www.rosettacommons.org/downloads/academic/2014/wk16/rosetta_2014.16.56682_bundle.tgz
+url=https://www.rosettacommons.org/downloads/academic/2016/wk15/rosetta_bin_linux_2016.15.58628_bundle.tgz
 
 filename=$(basename $url)
 
