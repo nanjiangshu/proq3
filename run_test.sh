@@ -37,12 +37,12 @@ if [[ $DEEP_INSTALLED == "yes" ]] ; then
     ./run_proq3.sh test.$num/1e12A_0001_deep.pdb -profile test.$num/target.fasta -repack no --debug_mode yes -deep yes
     ./run_proq3.sh test.$num/1e12A_0001_deep.subset.pdb -profile test.$num/target.fasta -repack yes --debug_mode yes -deep yes
 
-    if [[ ! -f test.$num/1e12A_0001_deep.pdb.proq3.sscore.local || ! -f test.$num/1e12A_0001_deep.pdb.proq3.sscore.global ]] ; then
+    if [[ ! -f test.$num/1e12A_0001_deep.pdb.proq3d.sscore.local || ! -f test.$num/1e12A_0001_deep.pdb.proq3d.sscore.global ]] ; then
         echo "ERROR: ProQ3D failed to run. The output files don't exist"
         exit 1
     else
-        check1d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.pdb.proq3.sscore.local tests_clean/1e12A_0001_deep.pdb.proq3.sscore.local test.$num/1e12A_0001_deep.pdb.proq3.sscore.global tests_clean/1e12A_0001_deep.pdb.proq3.sscore.global 2>&1`
-        check2d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.subset.pdb.proq3.sscore.local tests_clean/1e12A_0001_deep.subset.pdb.proq3.sscore.local test.$num/1e12A_0001_deep.subset.pdb.proq3.sscore.global tests_clean/1e12A_0001_deep.subset.pdb.proq3.sscore.global 2>&1`
+        check1d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.pdb.proq3d.sscore.local tests_clean/1e12A_0001_deep.pdb.proq3d.sscore.local test.$num/1e12A_0001_deep.pdb.proq3d.sscore.global tests_clean/1e12A_0001_deep.pdb.proq3d.sscore.global 2>&1`
+        check2d=`$R_SCRIPT ./ProQ3_scripts/test_verify.R test.$num/1e12A_0001_deep.subset.pdb.proq3d.sscore.local tests_clean/1e12A_0001_deep.subset.pdb.proq3d.sscore.local test.$num/1e12A_0001_deep.subset.pdb.proq3d.sscore.global tests_clean/1e12A_0001_deep.subset.pdb.proq3d.sscore.global 2>&1`
     fi
 
 fi

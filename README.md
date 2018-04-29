@@ -241,9 +241,9 @@ Otherwise, ProQ3 results will not be accurate.
 
 The default output files are:
 
-    * [pdb-model].proq3.local - local scores (per residue)
+    * [pdb-model].proq3d.sscore.local - local scores (per residue)
 
-    * [pdb-model].proq3.global - global scores (the predicted quality of the whole model)
+    * [pdb-model].proq3d.sscore.global - global scores (the predicted quality of the whole model)
 
     * [pdb-model].[method]_bfactor.pdb - pdb files with local scores in b-factor column (only when running with -output_pdbs yes option).
                                          [method] here is proq3, proq2, proqroscen or proqrosfa.
@@ -262,7 +262,9 @@ functions
 If you are using the deep learning version of the predictor (-deep option), then your output files will have columns
 ProQ2D, ProQRosCenD, ProQRosFAD and ProQ3D which correspond to deep learning version scores.
 
-If you are only interested in ProQ3/ProQ3D scores, you can simply use the 4th column in [pdb-model].proq3.local and [pdb-model].proq3.global files.
+If you are only interested in ProQ3/ProQ3D scores, you can simply use the 4th column in [pdb-model].proq3(d).sscore.local and [pdb-model].proq3(d).sscore.global files.
+
+Since version v3.2 ProQ3D also is able to predict CAD-score, lDDT and TM-score quality measures (-quality). The output of these predictions are stored in [pdb-model].proq3d.[quality-measure].local and [pdb-model].proq3d.[quality-measure].global files. These files will have only two columns: ProQ2D and ProQ3D predictions.
 
 IMPORTANT NOTE: ProQ3/ProQ3D is a regression based method. When training the method we used only values between 0 and 1 as our target quality measure.
                 However, there is no guarantee that the predicted value will be between 0 and 1. Occasionally, it can predict values slightly below 0 or slightly above 1.

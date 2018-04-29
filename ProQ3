@@ -27,9 +27,9 @@ Usage: $SCRIPT_NAME [parameters]
                              The global score is calculated as sum_of_local/target_length
 -k/--keep_files          [yes/no] default=no 
                              Should we keep the repacked models, svm input files and psiblast files?
--l/--local_output        [output_file_local] default=[pdb-model].proq3.local
+-l/--local_output        [output_file_local] default=[pdb-model].proq3d.[quality-measure].local
                              The output file for local predictions
--g/--global_output       [output_file_global] default=[pdb-model].proq3.global
+-g/--global_output       [output_file_global] default=[pdb-model].proq3d.[quality-measure].global
                              The output file for global predictions
 -o/--rosetta_log         [rosetta_log_file] default=[pdb-model].rosetta.log
                              The output file with Rosetta logs
@@ -167,24 +167,6 @@ if [[ $TARGET_LENGTH != "" ]] ; then
     fi
 fi
 
-if [[ $GLOBAL_OUT == "" ]] ; then
-    GLOBAL_OUT=$MODEL.proq3.$QUALITY.global
-fi
-
-if [[ $LOCAL_OUT == "" ]] ; then
-    LOCAL_OUT=$MODEL.proq3.$QUALITY.local
-fi
-
-if [[ -f $GLOBAL_OUT ]] ; then
-    echo "ERROR: The output file $GLOBAL_OUT already exists. Remove the file before (re)running ProQ3."
-    exit 1
-fi
-
-if [[ -f $LOCAL_OUT ]] ; then
-    echo "ERROR: The output file $LOCAL_OUT already exists. Remove the file before (re)running ProQ3."
-    exit 1
-fi
-
 if [[ $DEEP == "no" ]] || [[ $DEEP == "No" ]] || [[ $DEEP == "NO" ]] ; then
     DEEP="no"
 elif [[ $DEEP == "yes" ]] || [[ $DEEP == "Yes" ]] ||  [[ $DEEP == "YES" ]] || [[ $DEEP == "" ]] ; then
@@ -196,6 +178,39 @@ elif [[ $DEEP == "yes" ]] || [[ $DEEP == "Yes" ]] ||  [[ $DEEP == "YES" ]] || [[
 else
     echo "ERROR: -d/--deep $DEEP value is not recognized (should be yes or no)"
     usage
+fi
+
+
+if [[ $GLOBAL_OUT == "" ]] ; then
+    if [[ $DEEP == "no" ]] ; then
+        GLOBAL_OUT=$MODEL.proq3.$QUALITY.global
+    elif [[ $DEEP == "yes" ]] ; then
+        GLOBAL_OUT=$MODEL.proq3d.$QUALITY.global
+    else
+        echo "ERROR: -deep parameter not set"
+        exit 1
+    fi
+fi
+
+if [[ $LOCAL_OUT == "" ]] ; then
+    if [[ $DEEP == "no" ]] ; then
+        LOCAL_OUT=$MODEL.proq3.$QUALITY.local
+    elif [[ $DEEP == "yes" ]] ; then
+        LOCAL_OUT=$MODEL.proq3d.$QUALITY.local
+    else
+        echo "ERROR: -deep parameter not set"
+        exit 1
+    fi
+fi
+
+if [[ -f $GLOBAL_OUT ]] ; then
+    echo "ERROR: The output file $GLOBAL_OUT already exists. Remove the file before (re)running ProQ3."
+    exit 1
+fi
+
+if [[ -f $LOCAL_OUT ]] ; then
+    echo "ERROR: The output file $LOCAL_OUT already exists. Remove the file before (re)running ProQ3."
+    exit 1
 fi
 
 if [[ $ROSETTA_LOG == "" ]] ; then
@@ -353,7 +368,7 @@ if [[ ! -f $GLOBAL_OUT ]] ; then
         $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.proq2.svm $PROQ3_DIR/svm_models/ProQ2$R.model $MODEL$R.proq2.pred.$$.temp 
         $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.lowres.svm $PROQ3_DIR/svm_models/lowres$R.model $MODEL$R.lowres.pred.$$.temp 
         $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.highres.svm $PROQ3_DIR/svm_models/highres$R.model $MODEL$R.highres.pred.$$.temp 
-        $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.proq3.svm $PROQ3_DIR/svm_models/ProQ3$R.model $MODEL$R.proq3.pred.$$.temp 
+        $PROQ3_DIR/apps/svm_light/svm_classify $MODEL$R.proq3.svm $PROQ3_DIR/svm_models/ProQ3$R.model $MODEL$R.proq3.pred.$$.temp
         echo "ProQ2 ProQRosCen ProQRosFA ProQ3" > $LOCAL_OUT
         echo "ProQ2 ProQRosCen ProQRosFA ProQ3" > $GLOBAL_OUT
     elif [[ "$DEEP" == "yes" ]] && [[ "$QUALITY" == "sscore" ]] ; then
