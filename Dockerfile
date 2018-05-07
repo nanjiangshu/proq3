@@ -14,6 +14,7 @@ RUN apt-get install -y apt-utils  \
                        libxml2-dev libxslt1-dev libsqlite3-dev zlib1g-dev   \
                        r-base \
                        cmake  \
+                       locales-all  \
                        qt4-qmake  \
                        emboss-lib   \
                        emboss
@@ -62,8 +63,8 @@ RUN echo  "{\n  \"backend\": \"theano\",\n  \"epsilon\": 1e-07,\n  \"floatx\": \
 # Setting library path for rosetta
 #===============================
 ENV LD_LIBRARY_PATH "/app/proq3/apps/rosetta/main/source/build/src/release/linux/3.13/64/x86/gcc/4.8/default/:/app/proq3/apps/rosetta/main/source/build/external/release/linux/3.13/64/x86/gcc/4.8/default/"
+ENV USER_DIRS "/app"
 
-ENV LC_ALL "en_US.UTF-8"
 
 
 CMD ["/bin/bash" ]
