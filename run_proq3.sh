@@ -127,7 +127,7 @@ RunProQ3_with_profile(){
         modelfile=$outpath/$basename_modelfile
     fi
     exec_cmd "$rundir/bin/copy_features_from_master.pl $modelfile $workingseqfile"
-    cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality --output_pdbs $isOutputPDB --use_constant_seed $isConstantSeed"
+    cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality --output_pdbs $isOutputPDB --use_constant_seed $isConstantSeed --return_dist $isReturnDist"
     if [ "$targetlength" == "" ];then
         targetlength=`tail -n +2 $workingseqfile | tr -d "\n" | wc -c`
     fi
@@ -159,7 +159,7 @@ RunProQ3_without_profile(){
     exec_cmd "$rundir/bin/run_all_external.pl -pdb $modelfile -ncores $ncores"
 
     if [ $isOnlyBuildProfile -eq 0 ]; then
-        cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality --output_pdbs $isOutputPDB --use_constant_seed $isConstantSeed"
+        cmd="$rundir/ProQ3 -m $modelfile -r $isRepack -k $isKeepFiles -d $isDeep --debug_mode $isDebug --quality $quality --output_pdbs $isOutputPDB --use_constant_seed $isConstantSeed --return_dist $isReturnDist"
         if [ "$targetlength" != "" ];then
             cmd="$cmd -t $targetlength"
         fi
@@ -185,6 +185,7 @@ isDebug=no
 isKeepFiles=no
 isOutputPDB=no
 isConstantSeed=yes
+isReturnDist=no
 targetLength=
 verbose=0
 pathprofile=
@@ -269,10 +270,20 @@ while [ "$1" != "" ]; do
                 elif [ "$optstr" == "no" ];then
                     isConstantSeed=no
                 else
-                    echo "Bad argument \"$optstr\" after the option -output_pdbs, should be yes or no" >&2
+                    echo "Bad argument \"$optstr\" after the option -use_constant_seed, should be yes or no" >&2
                     exit 1
                 fi
-                shift;;           
+                shift;;          
+            -return_dist|--return_dist)optstr=$2;
+                if [ "$optstr" == "yes" ]; then
+                    isReturnDist=yes
+                elif [ "$optstr" == "no" ];then
+                    isReturnDist=no
+                else
+                    echo "Bad argument \"$optstr\" after the option -return_dist, should be yes or no" >&2
+                    exit 1
+                fi
+                shift;;            
             -t|-target_length|--target_length) targetlength=$2;shift;;
             -ncores|--ncores) ncores=$2;shift;;
             -verbose|--verbose) verbose=1;;

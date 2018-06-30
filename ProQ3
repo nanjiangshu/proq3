@@ -39,6 +39,9 @@ Usage: $SCRIPT_NAME [parameters]
                              Use constant seed when running Rosetta for side-chain repacking
 --debug_mode             [yes/no] default=no 
                              Debug mode keeps all temporary files
+--return_dist            [yes/no] default=no
+                             Returns distance instead of quality score in b-factor column. 
+                             Distances are converted using Sscore formula even if the score being used is CAD/lDDT/TMscore
 "
    exit 1 
 }
@@ -97,6 +100,10 @@ case $key in
     CONSTANT_SEED="$2"
     shift # past argument
     ;;
+    --return_dist)
+    RETURN_DIST="$2"
+    shift # past argument
+    ;;   
     -d|--debug_mode)
     DEBUG="$2"
     shift # past argument
@@ -251,6 +258,15 @@ elif [[ $CONSTANT_SEED == "yes" ]] || [[ $CONSTANT_SEED == "Yes" ]] ||  [[ $CONS
     CONSTANT_SEED="yes"
 else
     echo "ERROR: --use_constant_seed $CONSTANT_SEED value is not recognized (should be yes or no)"
+    usage
+fi
+
+if [[ $RETURN_DIST == "no" ]] || [[ $RETURN_DIST == "No" ]] || [[ $RETURN_DIST == "NO" ]] || [[ $RETURN_DIST == "" ]] ; then
+    RETURN_DIST="no"
+elif [[ $RETURN_DIST == "yes" ]] || [[ $RETURN_DIST == "Yes" ]] ||  [[ $RETURN_DIST == "YES" ]] ; then
+    RETURN_DIST="yes"
+else
+    echo "ERROR: --return_dist $RETURN_DIST value is not recognized (should be yes or no)"
     usage
 fi
 
@@ -410,17 +426,17 @@ if [[ ! -f $GLOBAL_OUT ]] ; then
             else
                 D=""
             fi
-            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq2.pred.$$.temp $MODEL$R.$QUALITY.proq2${D}_bfactor.pdb
-            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.lowres.pred.$$.temp $MODEL$R.$QUALITY.proqroscen${D}_bfactor.pdb
-            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.highres.pred.$$.temp $MODEL$R.$QUALITY.proqrosfa${D}_bfactor.pdb
-            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq3.pred.$$.temp $MODEL$R.$QUALITY.proq3${D}_bfactor.pdb
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq2.pred.$$.temp $MODEL$R.$QUALITY.proq2${D}_bfactor.pdb $RETURN_DIST
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.lowres.pred.$$.temp $MODEL$R.$QUALITY.proqroscen${D}_bfactor.pdb $RETURN_DIST
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.highres.pred.$$.temp $MODEL$R.$QUALITY.proqrosfa${D}_bfactor.pdb $RETURN_DIST
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq3.pred.$$.temp $MODEL$R.$QUALITY.proq3${D}_bfactor.pdb $RETURN_DIST
         fi
         tail -n +2 $LOCAL_OUT | awk -v my_length="$TARGET_LENGTH" '{ sum1 += $1 ; sum2 += $2 ; sum3 += $3 ; sum4 += $4 } END { if (my_length > 0) print sum1 / my_length, sum2 / my_length, sum3 / my_length, sum4 / my_length }' >> $GLOBAL_OUT
     else # ProQ3D-lDDT ProQ3D-CAD and ProQ3D-TM don't have ProQRosCenD ProQRosFAD columns, so they only have 2 columns (ProQ2D and ProQ3D)
         paste -d " " $MODEL$R.proq2.pred.$$.temp $MODEL$R.proq3.pred.$$.temp >> $LOCAL_OUT
         if [[ "$OUTPUT_PDBS" == "yes" ]] ; then
-            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq2.pred.$$.temp $MODEL$R.$QUALITY.proq2d_bfactor.pdb
-            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq3.pred.$$.temp $MODEL$R.$QUALITY.proq3d_bfactor.pdb
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq2.pred.$$.temp $MODEL$R.$QUALITY.proq2d_bfactor.pdb $RETURN_DIST
+            $PROQ3_DIR/ProQ3_scripts/format_bfactor.py $MODEL$R $MODEL$R.proq3.pred.$$.temp $MODEL$R.$QUALITY.proq3d_bfactor.pdb $RETURN_DIST
         fi
         tail -n +2 $LOCAL_OUT | awk -v my_length="$TARGET_LENGTH" '{ sum1 += $1 ; sum2 += $2 } END { if (my_length > 0) print sum1 / my_length, sum2 / my_length }' >> $GLOBAL_OUT
     fi

@@ -19,9 +19,10 @@ Parameters:
     <input-pdb> - input pdb file
     <input-local> - input local score file (one column, no header)
     <output-pdb> - output pdb file with local scores in B-factor column
+    <return-dist> - should we return distance in b-factor column instead of a quality score (TRUE/FALSE)
 """ % script_name
 
-if len(sys.argv) != 4:
+if len(sys.argv) != 5:
     sys.exit(usage_string)
 
 ################################ Functions ################################
@@ -54,7 +55,7 @@ def read_pdb(filename, scores):
         sys.stderr.write("ERROR: length of local scores file does not match number of residues in pdb: " + filename + "\n")
     return out_str
 
-def read_scores(filename):
+def read_scores(filename, return_dist):
     scores = []    
     f = open(filename)
     
@@ -64,6 +65,8 @@ def read_scores(filename):
             break
         line = line.rstrip('\n')
         score = float(line)
+        if return_dist == "yes":
+            score = s2d(score)
         score_str = "%6.3f" % score
         scores.append(score_str)
         #bits = line.split("\t")    
@@ -78,12 +81,25 @@ def write_data(output_file, out_str):
     f.write(out_str)
     f.close()
 
+def s2d(s):
+    d0=3
+    #d=15 # for CASP we cap the distance at 15 angstroms
+    d=99.999 # for CASP we cap the distance at 100 angstroms
+    #if s>0.03846: # this is the S score for 15 angstroms
+    if s>0.0009: # this is the S score for 100 angstroms
+        if s>=1:
+            d=0
+        else:
+            d=sqrt(1/s-1)*d0
+    return d
+
 ################################ Variables ################################
 
 # Input files/directories
 input_file = sys.argv[1]
 local_score_file = sys.argv[2]
 output_file = sys.argv[3]
+return_dist = sys.argv[4]
 
 # Output files/directories
 # N/A
@@ -98,7 +114,7 @@ output_file = sys.argv[3]
     
 #sys.stderr.write("%s is running with arguments: %s\n" % (script_name, str(sys.argv[1:])))
 
-scores = read_scores(local_score_file)
+scores = read_scores(local_score_file, return_dist)
 
 out_str = read_pdb(input_file, scores)
 
