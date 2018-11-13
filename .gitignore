@@ -1,0 +1,40 @@
+# Compiled source
+*.pyc
+
+# SQLite 
+*.sqlite3
+*.sqlite
+
+# vim temp files
+.*.swp
+
+# misc files
+Dockerfile.common
+Dockerfile.test
+apps/rosetta
+apps/sspro4/blast2.2.8
+bak/
+database/
+default.sc
+entrypoint-common.sh
+entrypoint.sh
+formatdb.log
+log/
+paths.sh
+proq3.img
+set_env.sh
+test.60391.tar.gz
+test.60391/
+test/GOAL_COMPLEX_TS2
+test/GOAL_COMPLEX_TS2.pdb
+test/T0859.fa
+test/T0884.fa
+test/T0884/
+test/pcons10015.1QZV_U.rpsblast.4.pdb
+test/sequence.fasta
+test/server19_TS1
+test/t1.log
+tests_clean/1e12A_0001_deep.pdb.proq3.sscore.global
+tests_clean/1e12A_0001_deep.pdb.proq3.sscore.local
+tests_clean/1e12A_0001_deep.subset.pdb.proq3.sscore.global
+tests_clean/1e12A_0001_deep.subset.pdb.proq3.sscore.local
