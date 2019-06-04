@@ -68,7 +68,7 @@ NOTE: If you don't provide target protein amino acid sequence in fasta format, t
 always provide the target protein fasta sequence, unless you are sure that the model has a full amino acid sequence as in the target protein. 
 Otherwise, ProQ3 results will not be accurate.
   
-Created 2016-01-28, updated 2017-10-08
+Created 2016-01-28, updated 2019-06-04
 
 Authors: Karolis Uziela (karolis.uziela@gmail.com), David Menéndez Hurtado (david.menendez.hurtado@scilifelab.se), Nanjiang Shu (nanjiang.shu@scilifelab.se), Björn Wallner (bjornw@ifm.liu.se), Arne Elofsson (arne@bioinfo.se)
 
@@ -103,6 +103,21 @@ exec_cmd(){ #{{{
         echo "$*"
     fi
     eval "$*"
+}
+#}}}
+FilterHT(){ #{{{ modelFile
+    # Filter the line with HT noted ATOM record, without filtering, Rosetta
+    # will fail to run the model
+    # The function return the original name of the modelfile if it does not
+    # contain such lines and return a new filename if the modelfile is changed
+    local modelfile=$1
+    local newfile=${1}_fixed
+    if grep -q "^ATOM.*HT" $modelfile; then 
+        grep -vE "^ATOM.*HT" $modelfile > $newfile
+        echo "$newfile"
+    else
+        echo "$modelfile"
+    fi
 }
 #}}}
 RunProQ3_with_profile(){ 
@@ -377,6 +392,7 @@ if [ "$targetseqfile" != "" -o "$pathprofile" != ""  ];then
     if [ $isOnlyBuildProfile -eq 0 ] ;then
         for ((i=0;i<numModel;i++));do
             modelfile=${modelList[$i]}
+            modelfile=$(FilterHT $modelfile)
             RunProQ3_with_profile "$modelfile"
         done
     fi
@@ -391,6 +407,7 @@ NOTE: It is always recommended to provide full target sequence or pre-built targ
 "
     for ((i=0;i<numModel;i++));do
         modelfile=${modelList[$i]}
+        modelfile=$(FilterHT $modelfile)
         RunProQ3_without_profile "$modelfile"
     done
 fi
