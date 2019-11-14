@@ -52,6 +52,7 @@ RUN cd /app/proq3 &&\
 RUN mkdir -p /app/proq3/database/blastdb \
             /app/proq3/apps/rosetta \
             /scratch \
+            /static \
           /home/user/.keras
 
 #================================
