@@ -1,6 +1,6 @@
-#ProQ3/ProQ3D
+# ProQ3/ProQ3D
 
-###Authors: 
+### Authors: 
 Karolis Uziela (karolis.uziela@gmail.com)
 
 David Menéndez Hurtado (david.menendez.hurtado@scilifelab.se)
@@ -44,7 +44,7 @@ installation of Docker.
    can be started with any user to your preference. We also mount the dir
    `/scratch` on localhost to the `/scratch` within the container.
 
-    `docker run  -e USER_ID=$(id -u $USER) -v /data/blastdb:/app/proq3/database/blastdb -v /data/rosetta/rosetta_2014.16.56682_bundle:/app/proq3/apps/rosetta -v /scratch:/scratch  --name proq3 -d  nanjiang/proq3`
+    `docker run  -e USER_ID=$(id -u $USER) -v /data/blastdb:/app/proq3/database/blastdb -v /data/rosetta/rosetta_bin_linux_2016.15.58628_bundle:/app/proq3/apps/rosetta -v /scratch:/scratch  --restart=always -it --name proq3 -d  nanjiang/proq3`
 
 5. Now you can test run the ProQ3 command 
 
@@ -140,7 +140,7 @@ If you would like to use the deep learning version of the predictor (ProQ3D), th
 
 5. If you don't have "Theano" package, install it by typing `pip install Theano`
 
-##Test run
+## Test run
 
 Go to ProQ3 installation directory and type 
 
@@ -205,7 +205,7 @@ Other options:
   -h, --help           Print this help message and exit
 ```
 
-###Example commands for using the script `run_proq3.sh`
+### Example commands for using the script `run_proq3.sh`
    * run ProQ3 (SVM version) for a given model structure and the full target sequence in fasta format (see note below)
 
         $ run_proq3.sh tests_clean/1e12A_0001.pdb -fasta tests_clean/target.fasta -outpath test_out1 -deep no
@@ -236,7 +236,7 @@ NOTE: If you don't provide target protein amino acid sequence in fasta format, t
 always provide the target protein fasta sequence, unless you are sure that the model has a full amino acid sequence as in the target protein.
 Otherwise, ProQ3 results will not be accurate.
 
-###Output files
+### Output files
 
 The default output files are:
 
@@ -270,7 +270,7 @@ IMPORTANT NOTE: ProQ3/ProQ3D is a regression based method. When training the met
                 If you would like to have values between 0 and 1, you might do some post-processing. However, in our experience, the correlation between the predicted values
                 and the real values might slightly drop if you limit them between 0 and 1.
 
-###Running ProQ3 with GNU Parallel
+### Running ProQ3 with GNU Parallel
 
 Since ProQ3D version 3.2.1 we provide a helper script `./proq3_all.sh` to run ProQ3D on multiple pdb files for multiple quality measures using GNU Parallel.
 
@@ -292,7 +292,7 @@ $ do
 $     ./run_proq3.sh -profile $fasta_file -l $pdb_file_list -keep_files yes -quality $q
 $ done
 
-###Options explained in more detail
+### Options explained in more detail
 
 * PDB-model           You can enter one or more PDB models to be evaluated by ProQ3 in the same run if they share the same target sequence.
 
